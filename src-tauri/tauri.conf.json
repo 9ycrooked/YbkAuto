@@ -13,8 +13,12 @@
     "windows": [
       {
         "title": "YbkAuto",
-        "width": 800,
-        "height": 600
+        "width": 915,
+        "height": 600,
+        "minWidth": 915,
+        "minHeight": 600,
+        "center": true
+
       }
     ],
     "security": {

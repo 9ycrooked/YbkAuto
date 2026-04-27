@@ -75,20 +75,15 @@ const toggleAllCourses = () => {
   if (allCoursesSelected.value) {
     completionCourseIds.value = new Set();
   } else {
-    completionCourseIds.value = new Set(courses.value.map((c) => c.clazzCourseId));
+    completionCourseIds.value = new Set(courses.value.map((c: CourseSummary) => c.clazzCourseId));
   }
 };
 
-const spotlightRef = ref<HTMLElement | null>(null);
-const spotlightPos = ref({ x: 50, y: 50 });
-
-const onSpotlightMove = (e: MouseEvent) => {
-  const el = spotlightRef.value;
-  if (!el) return;
-  const rect = el.getBoundingClientRect();
-  const x = ((e.clientX - rect.left) / rect.width) * 100;
-  const y = ((e.clientY - rect.top) / rect.height) * 100;
-  spotlightPos.value = { x, y };
+const handleSpotlightMove = (e: MouseEvent) => {
+  const card = e.currentTarget as HTMLDivElement;
+  const rect = card.getBoundingClientRect();
+  card.style.setProperty('--mx', `${((e.clientX - rect.left) / rect.width) * 100}%`);
+  card.style.setProperty('--my', `${((e.clientY - rect.top) / rect.height) * 100}%`);
 };
 
 const triggerCardReveal = () => {
@@ -233,12 +228,8 @@ onMounted(() => {
             v-for="(course, index) in courses"
             :key="course.clazzCourseId"
             :class="['course-card', 'spotlight-card', { 'in-view': cardsRevealed }]"
-            :style="{
-              transitionDelay: cardsRevealed ? `${Math.min(index * 0.06, 0.42)}s` : '0s',
-              '--mx': spotlightPos.x + '%',
-              '--my': spotlightPos.y + '%',
-            }"
-            @mousemove="onSpotlightMove"
+            :style="{ transitionDelay: cardsRevealed ? `${Math.min(index * 0.06, 0.42)}s` : '0s' }"
+            @mousemove="handleSpotlightMove"
           >
             <div class="course-card__top">
               <div>
@@ -291,7 +282,7 @@ onMounted(() => {
               <div class="course-select-body">
                 <AnimatedList
                   v-if="sortedCourses.length"
-                  :items="sortedCourses.map(c => ({ id: c.clazzCourseId, label: c.courseName, subLabel: c.className + ' · ' + c.teacherName }))"
+                  :items="sortedCourses.map((c: CourseSummary) => ({ id: c.clazzCourseId, label: c.courseName, subLabel: c.className + ' · ' + c.teacherName }))"
                   :selected-ids="completionCourseIds"
                   :show-gradients="true"
                   :enable-arrow-navigation="true"
@@ -627,6 +618,8 @@ h1, h2, h3, p { margin: 0; }
 
 /* Course Card (SpotlightCard) */
 .course-card {
+  --mx: 50%;
+  --my: 50%;
   position: relative; background: var(--surface); border: 1px solid var(--border);
   border-radius: 16px; padding: 20px;
   box-shadow: 0 1px 3px rgba(var(--shadow-color), calc(var(--shadow-strength) * 1));
@@ -636,7 +629,7 @@ h1, h2, h3, p { margin: 0; }
 }
 .course-card::before {
   content: ''; position: absolute; inset: 0; border-radius: inherit; opacity: 0;
-  background: radial-gradient(600px circle at var(--mx, 50%) var(--my, 50%), rgba(var(--accent-cool-rgb), 0.08) 0%, transparent 60%);
+  background: radial-gradient(600px circle at var(--mx) var(--my), rgba(var(--accent-cool-rgb), 0.08) 0%, transparent 60%);
   transition: opacity 0.3s var(--ease); pointer-events: none; z-index: 0;
 }
 .course-card:hover::before { opacity: 1; }
