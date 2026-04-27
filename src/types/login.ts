@@ -7,8 +7,8 @@ export type OpenCheckinInfo = {
 };
 
 export type ResourceState = {
-  status: string;
-  label: string;
+  completed: number;
+  incomplete: number;
 };
 
 export type CourseSummary = {
@@ -17,6 +17,7 @@ export type CourseSummary = {
   className: string;
   teacherName: string;
   courseStatus: string;
+  createTime: string;
   checkinState: CheckinState;
   openCheckin: OpenCheckinInfo | null;
   resourceState: ResourceState;

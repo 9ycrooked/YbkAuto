@@ -149,15 +149,15 @@ pub struct OpenCheckinInfo {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ResourceState {
-    pub status: String,
-    pub label: String,
+    pub completed: usize,
+    pub incomplete: usize,
 }
 
 impl Default for ResourceState {
     fn default() -> Self {
         Self {
-            status: "unknown".to_string(),
-            label: "待实现".to_string(),
+            completed: 0,
+            incomplete: 0,
         }
     }
 }
@@ -170,6 +170,7 @@ pub struct CourseSummary {
     pub class_name: String,
     pub teacher_name: String,
     pub course_status: String,
+    pub create_time: String,
     pub checkin_state: String,
     pub open_checkin: Option<OpenCheckinInfo>,
     pub resource_state: ResourceState,
@@ -582,6 +583,7 @@ async fn build_dashboard(client: &MosoteachClient) -> Result<DashboardState, Str
             class_name: course.clazz.name,
             teacher_name: course.creater.full_name,
             course_status: course.status,
+            create_time: course.create_time,
             checkin_state,
             open_checkin,
             resource_state: ResourceState::default(),
@@ -695,10 +697,10 @@ mod tests {
     }
 
     #[test]
-    fn resource_state_defaults_to_placeholder() {
+    fn resource_state_defaults_to_zero() {
         let state = ResourceState::default();
 
-        assert_eq!(state.status, "unknown");
-        assert_eq!(state.label, "待实现");
+        assert_eq!(state.completed, 0);
+        assert_eq!(state.incomplete, 0);
     }
 }
