@@ -1,30 +1,11 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from "vue";
 import { useSessionStore } from "../stores/session";
-import type { CourseSummary } from "../types/login";
 
 const sessionStore = useSessionStore();
 const cardsRevealed = ref(false);
 
 const courses = computed(() => sessionStore.courses);
-
-const checkinLabel = (course: CourseSummary) => {
-  switch (course.checkinState) {
-    case "open":
-      return "进行中";
-    case "closed":
-      return "未开启";
-    default:
-      return "获取失败";
-  }
-};
-
-const checkinClass = (course: CourseSummary) => ({
-  "status-chip": true,
-  "status-chip--success": course.checkinState === "open",
-  "status-chip--warning": course.checkinState === "closed",
-  "status-chip--muted": course.checkinState === "error",
-});
 
 const triggerCardReveal = () => {
   cardsRevealed.value = false;
@@ -103,12 +84,6 @@ const onRefresh = () => {
       </div>
       <div class="summary-item">
         <div class="summary-item-row">
-          <span class="summary-label">开放签到</span>
-        </div>
-        <span class="summary-value">{{ sessionStore.openCheckinCount }}</span>
-      </div>
-      <div class="summary-item">
-        <div class="summary-item-row">
           <span class="summary-label">资源状态</span>
         </div>
         <span class="summary-value"
@@ -136,27 +111,10 @@ const onRefresh = () => {
         </div>
         <div class="course-card__body">
           <div class="info-row">
-            <span class="info-label">签到状态</span>
-            <span :class="checkinClass(course)">{{ checkinLabel(course) }}</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">签到情况</span>
-            <span v-if="course.openCheckin" class="checkin-note"
-              >{{ course.openCheckin.title }}<span v-if="course.openCheckin.type">
-                · {{ course.openCheckin.type }}</span
-              ></span
-            >
-            <span v-else-if="course.checkinState === 'closed'" class="checkin-note muted"
-              >未开启</span
-            >
-            <span v-else class="checkin-note muted">获取失败</span>
-          </div>
-          <div class="info-row">
             <span class="info-label">资源状态</span>
             <span class="resource-pill"
               >已完成 {{ course.resourceState.completed }} /
-              未完成 {{ course.resourceState.incomplete }}</span
-            >
+              未完成 {{ course.resourceState.incomplete }}</span>
           </div>
         </div>
       </article>
@@ -192,7 +150,7 @@ const onRefresh = () => {
 
 .summary-strip {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 2px;
   background: var(--border);
   border-radius: 16px;

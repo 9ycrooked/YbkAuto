@@ -1,4 +1,4 @@
-use crate::api::{URL_CC_LIST_JOINED, URL_CHECKIN_OPEN, URL_LOGIN};
+use crate::api::{URL_CC_LIST_JOINED, URL_LOGIN};
 use crate::request_signer::{sign_request, RequestContext};
 use indexmap::IndexMap;
 use reqwest::{
@@ -13,7 +13,15 @@ use std::{
 use tauri::{AppHandle, Manager};
 
 const SESSION_FILE_NAME: &str = "session.json";
-const NO_OPEN_CHECKIN_MESSAGES: [&str; 3] = ["暂无签到", "未开启", "没有开启"];
+
+pub struct MosoteachClient {
+    http_client: Client,
+    user: Option<User>,
+    user_id: Option<String>,
+    access_id: Option<String>,
+    access_secret: Option<String>,
+    last_sec_update_ts_s: Option<String>,
+}
 
 pub fn base_headers() -> HeaderMap {
     let mut headers = HeaderMap::new();
@@ -128,24 +136,6 @@ pub struct Creater {
     pub avatar_url: String,
 }
 
-#[derive(Debug, Deserialize)]
-struct CurrentOpenApiResponse {
-    pub result_code: i64,
-    pub result_msg: String,
-    #[serde(default)]
-    pub data: Option<OpenCheckinInfo>,
-}
-
-#[derive(Debug, Deserialize, Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct OpenCheckinInfo {
-    #[serde(rename = "checkinId", alias = "checkin_id")]
-    pub checkin_id: String,
-    pub title: String,
-    #[serde(rename = "type", default)]
-    pub kind: String,
-}
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ResourceState {
@@ -171,8 +161,6 @@ pub struct CourseSummary {
     pub teacher_name: String,
     pub course_status: String,
     pub create_time: String,
-    pub checkin_state: String,
-    pub open_checkin: Option<OpenCheckinInfo>,
     pub resource_state: ResourceState,
 }
 
@@ -256,15 +244,6 @@ impl StoredSession {
     }
 }
 
-pub struct MosoteachClient {
-    http_client: Client,
-    user: Option<User>,
-    user_id: Option<String>,
-    access_id: Option<String>,
-    access_secret: Option<String>,
-    last_sec_update_ts_s: Option<String>,
-}
-
 impl MosoteachClient {
     pub fn new() -> Self {
         let http_client = Client::builder()
@@ -321,12 +300,17 @@ impl MosoteachClient {
             .form(&form)
             .send()
             .await
-            .map_err(|error| error.to_string())?;
+            .map_err(|error| format!("网络请求失败: {}", error))?;
 
-        let login_response: LoginApiResponse = response
-            .json()
-            .await
-            .map_err(|error| error.to_string())?;
+        let status = response.status();
+        let body = response.text().await.map_err(|e| format!("读取响应失败: {}", e))?;
+        
+        if !body.starts_with('{') {
+            return Err(format!("服务器返回非JSON响应 (状态码: {}): {}", status, body));
+        }
+
+        let login_response: LoginApiResponse = serde_json::from_str(&body)
+            .map_err(|e| format!("JSON解析失败: {}", e))?;
 
         if login_response.result_code != 0 {
             return Err(login_response.result_msg);
@@ -386,68 +370,6 @@ impl MosoteachClient {
         }
 
         Ok(course_response.courses)
-    }
-
-    pub async fn current_open_checkin(
-        &self,
-        clazz_course_id: &str,
-    ) -> Result<Option<OpenCheckinInfo>, String> {
-        let user_id = self
-            .user_id
-            .as_deref()
-            .ok_or_else(|| "user_id 未登录".to_string())?;
-        let access_secret = self
-            .access_secret
-            .as_deref()
-            .ok_or_else(|| "access_secret 未登录".to_string())?;
-        let access_id = self
-            .access_id
-            .as_deref()
-            .ok_or_else(|| "access_id 未登录".to_string())?;
-        let sec_ts = self
-            .last_sec_update_ts_s
-            .as_deref()
-            .ok_or_else(|| "last_sec_update_ts_s 未登录".to_string())?;
-
-        let mut form = IndexMap::new();
-        form.insert("clazz_course_id", clazz_course_id);
-
-        let (time, sign) = sign_request(
-            &RequestContext::new(URL_CHECKIN_OPEN)
-                .with_form(&form, false)
-                .with_user_id(user_id)
-                .with_secret(access_secret),
-        );
-
-        let response = self
-            .http_client
-            .post(URL_CHECKIN_OPEN)
-            .header("Date", &time)
-            .header("X-mssvc-access-id", access_id)
-            .header("X-mssvc-signature", &sign)
-            .header("X-mssvc-sec-ts", sec_ts)
-            .form(&form)
-            .send()
-            .await
-            .map_err(|error| error.to_string())?;
-
-        let current_open_response: CurrentOpenApiResponse = response
-            .json()
-            .await
-            .map_err(|error| error.to_string())?;
-
-        if current_open_response.result_code == 0 {
-            return Ok(current_open_response.data);
-        }
-
-        if NO_OPEN_CHECKIN_MESSAGES
-            .iter()
-            .any(|message| current_open_response.result_msg.contains(message))
-        {
-            return Ok(None);
-        }
-
-        Err(current_open_response.result_msg)
     }
 }
 
@@ -568,27 +490,18 @@ fn write_json_file<T: Serialize>(path: &Path, data: &T) -> Result<(), String> {
 
 async fn build_dashboard(client: &MosoteachClient) -> Result<DashboardState, String> {
     let courses = client.list_course().await?;
-    let mut course_summaries = Vec::with_capacity(courses.len());
-
-    for course in courses {
-        let (checkin_state, open_checkin) = match client.current_open_checkin(&course.id).await {
-            Ok(Some(open_checkin)) => ("open".to_string(), Some(open_checkin)),
-            Ok(None) => ("closed".to_string(), None),
-            Err(_) => ("error".to_string(), None),
-        };
-
-        course_summaries.push(CourseSummary {
+    let course_summaries = courses
+        .into_iter()
+        .map(|course| CourseSummary {
             clazz_course_id: course.id,
             course_name: course.course.name,
             class_name: course.clazz.name,
             teacher_name: course.creater.full_name,
             course_status: course.status,
             create_time: course.create_time,
-            checkin_state,
-            open_checkin,
             resource_state: ResourceState::default(),
-        });
-    }
+        })
+        .collect();
 
     Ok(DashboardState {
         courses: course_summaries,
@@ -677,23 +590,6 @@ mod tests {
 
         assert_eq!(response.courses.len(), 1);
         assert_eq!(response.courses[0].course.name, "现代设计史");
-    }
-
-    #[test]
-    fn current_open_response_deserializes() {
-        let payload = r#"{
-          "result_code": 0,
-          "result_msg": "OK",
-          "data": {
-            "checkin_id": "checkin-1",
-            "title": "课堂签到",
-            "type": "NORMAL"
-          }
-        }"#;
-
-        let response: CurrentOpenApiResponse = serde_json::from_str(payload).unwrap();
-
-        assert_eq!(response.data.unwrap().checkin_id, "checkin-1");
     }
 
     #[test]

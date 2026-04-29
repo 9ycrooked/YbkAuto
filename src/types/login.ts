@@ -1,11 +1,3 @@
-export type CheckinState = "open" | "closed" | "error";
-
-export type OpenCheckinInfo = {
-  checkinId: string;
-  title: string;
-  type: string;
-};
-
 export type ResourceState = {
   completed: number;
   incomplete: number;
@@ -18,8 +10,6 @@ export type CourseSummary = {
   teacherName: string;
   courseStatus: string;
   createTime: string;
-  checkinState: CheckinState;
-  openCheckin: OpenCheckinInfo | null;
   resourceState: ResourceState;
 };
 

@@ -21,9 +21,6 @@ export const useSessionStore = defineStore("session", () => {
   const sortedCourses = computed(() =>
     [...courses.value].sort((a, b) => b.createTime.localeCompare(a.createTime)),
   );
-  const openCheckinCount = computed(
-    () => courses.value.filter((course) => course.checkinState === "open").length,
-  );
   const totalCompletedResources = computed(() =>
     courses.value.reduce((count, course) => count + course.resourceState.completed, 0),
   );
@@ -97,7 +94,6 @@ export const useSessionStore = defineStore("session", () => {
     dashboardError,
     courses,
     sortedCourses,
-    openCheckinCount,
     totalCompletedResources,
     totalIncompleteResources,
     userInitials,

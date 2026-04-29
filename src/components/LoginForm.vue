@@ -4,6 +4,7 @@ import { invoke } from "@tauri-apps/api/core";
 
 import InputBox from "./FloatingLabelInput.vue";
 import LoginButton from "./LoginButton.vue";
+import ToastMessage from "./ToastMessage.vue";
 import type { SessionState } from "../types/login";
 
 const props = defineProps<{
@@ -18,6 +19,8 @@ const username = ref("");
 const password = ref("");
 const loginError = ref("");
 const isLoading = ref(false);
+const showToast = ref(false);
+const toastMessage = ref("");
 
 watch(
   () => props.rememberedUsername,
@@ -44,8 +47,8 @@ const handleLogin = async () => {
     password.value = "";
     emit("loginSuccess", session);
   } catch (error) {
-    loginError.value =
-      typeof error === "string" ? error : "登录失败，请稍后再试";
+    toastMessage.value = "账号或密码错误";
+    showToast.value = true;
   } finally {
     isLoading.value = false;
   }
@@ -65,6 +68,13 @@ const handleLogin = async () => {
       label="登录"
     />
   </form>
+
+  <ToastMessage
+    :visible="showToast"
+    :message="toastMessage"
+    type="error"
+    @close="showToast = false"
+  />
 </template>
 
 <style scoped>
