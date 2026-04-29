@@ -43,18 +43,18 @@ const labelChars = props.label.split('')
 .form-control input {
   background-color: transparent;
   border: 0;
-  border-bottom: 2px #282936 solid;
+  border-bottom: 2px var(--border) solid;
   display: block;
   width: 100%;
   padding: 15px 0;
   font-size: 18px;
-  color: #fff;
+  color: var(--text);
 }
 
 .form-control input:focus,
 .form-control input:valid {
   outline: 0;
-  border-bottom-color: #6d6da0;
+  border-bottom-color: var(--accent);
 }
 
 .form-control label {
@@ -69,13 +69,13 @@ const labelChars = props.label.split('')
   font-size: 16px;
   font-weight: 500;
   min-width: 5px;
-  color: #fff;
+  color: var(--text-3);
   transition: 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
 .form-control input:focus+label span,
 .form-control input:valid+label span {
-  color: #6d6da0;
+  color: var(--accent);
   transform: translateY(-30px);
 }
 </style>

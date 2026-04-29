@@ -11,12 +11,7 @@ defineEmits<{
 </script>
 
 <template>
-  <button
-    class="btn"
-    type="submit"
-    :disabled="disabled || loading"
-    @click="$emit('click')"
-  >
+  <button class="btn" type="submit" :disabled="disabled || loading" @click="$emit('click')">
     <span class="btn-text">{{ loading ? "登录中..." : label ?? "登录" }}</span>
     <span class="btn-icon" aria-hidden="true">></span>
   </button>
@@ -33,10 +28,10 @@ defineEmits<{
   padding: 0 12px 0 18px;
   border: none;
   border-radius: 999px;
-  background: linear-gradient(135deg, #5661f6, #7b61ff);
-  color: #fff;
+  background: var(--accent-dim);
+  color: #ffffff;
   cursor: pointer;
-  box-shadow: 0 12px 28px rgba(86, 97, 246, 0.35);
+  box-shadow: 0 12px 28px rgba(var(--accent-rgb), 0.35);
   transition:
     transform 0.18s ease,
     box-shadow 0.18s ease,
@@ -45,7 +40,8 @@ defineEmits<{
 
 .btn:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 16px 32px rgba(86, 97, 246, 0.42);
+  background: var(--accent-hover-dim);
+  box-shadow: 0 16px 32px rgba(var(--accent-rgb), 0.42);
 }
 
 .btn:active:not(:disabled) {

@@ -77,7 +77,7 @@ const handleLogin = async () => {
 
 .login-error {
   margin: -0.25rem 0 0;
-  color: #ff9ca6;
+  color: var(--error);
   font-size: 0.92rem;
   text-align: left;
 }
