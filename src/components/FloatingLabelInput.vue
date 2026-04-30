@@ -1,8 +1,7 @@
 <script setup lang="ts">
-// 定义 props
 const props = defineProps<{
-  label: string      // 标签文字，如 "账号"、"密码"
-  type?: string      // 输入类型，默认 text
+  label: string
+  type?: string
 }>()
 
 const modelValue = defineModel<string>({ default: "" })
@@ -11,21 +10,23 @@ const onInput = (event: Event) => {
   modelValue.value = (event.target as HTMLInputElement).value
 }
 
-// 将标签文字拆分成字符数组
 const labelChars = props.label.split('')
 </script>
 
 <template>
-  <div class="form-control">
-    <input :type="type || 'text'" required
-           :value="modelValue"
-           @input="onInput"
+  <div class="field">
+    <input
+      :type="type || 'text'"
+      required
+      :value="modelValue"
+      @input="onInput"
+      autocomplete="off"
     >
     <label>
       <span
-          v-for="(char, index) in labelChars"
-          :key="index"
-          :style="{ transitionDelay: `${index * 60}ms` }"
+        v-for="(char, index) in labelChars"
+        :key="index"
+        :style="{ transitionDelay: `${index * 60}ms` }"
       >
         {{ char }}
       </span>
@@ -34,48 +35,47 @@ const labelChars = props.label.split('')
 </template>
 
 <style scoped>
-.form-control {
+.field {
   position: relative;
-  margin: 20px 0 40px;
+  margin: 14px 0 28px;
   width: 100%;
 }
 
-.form-control input {
+.field input {
   background-color: transparent;
-  border: 0;
+  border: none;
   border-bottom: 2px var(--border) solid;
   display: block;
   width: 100%;
-  padding: 15px 0;
-  font-size: 18px;
+  padding: 10px 0;
+  font-size: 16px;
   color: var(--text);
 }
 
-.form-control input:focus,
-.form-control input:valid {
-  outline: 0;
+.field input:focus {
+  outline: none;
   border-bottom-color: var(--accent);
 }
 
-.form-control label {
+.field label {
   position: absolute;
-  top: 15px;
+  top: 10px;
   left: 0;
   pointer-events: none;
 }
 
-.form-control label span {
+.field label span {
   display: inline-block;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
   min-width: 5px;
   color: var(--text-3);
   transition: 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
-.form-control input:focus+label span,
-.form-control input:valid+label span {
+.field input:focus + label span,
+.field input:valid + label span {
   color: var(--accent);
-  transform: translateY(-30px);
+  transform: translateY(-26px);
 }
 </style>

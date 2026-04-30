@@ -13,6 +13,7 @@ export const useSessionStore = defineStore("session", () => {
 
   const session = ref<SessionState>(createGuestSession());
   const isBootstrapping = ref(true);
+  const isLoggingIn = ref(false);
   const isRefreshing = ref(false);
   const bootstrapError = ref("");
   const dashboardError = ref("");
@@ -87,11 +88,13 @@ export const useSessionStore = defineStore("session", () => {
     }
     dashboardError.value = "";
     session.value = createGuestSession(rememberedUsername);
+    isLoggingIn.value = false;
   };
 
   return {
     session,
     isBootstrapping,
+    isLoggingIn,
     isRefreshing,
     bootstrapError,
     dashboardError,

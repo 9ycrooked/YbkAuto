@@ -121,6 +121,20 @@ const handleLogout = async () => {
             </div>
           </div>
           <p class="about-tech">技术栈: Tauri v2 · Vue 3 · TypeScript · Rust</p>
+
+          <div class="contact-card">
+            <div class="contact-icon-wrapper">
+              <svg class="contact-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect width="20" height="16" x="2" y="4" rx="2"/>
+                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+              </svg>
+            </div>
+            <div class="contact-content">
+              <h4 class="contact-title">意见反馈</h4>
+              <p class="contact-desc">如有任何问题请向该邮箱反馈</p>
+              <a :href="'mailto:qianmang1@gmail.com'" class="contact-email">qianmang1@gmail.com</a>
+            </div>
+          </div>
         </div>
       </template>
       <template v-else-if="selectedSetting === 'account'">
@@ -384,6 +398,67 @@ const handleLogout = async () => {
   font-size: 0.8125rem;
   color: var(--text-3);
   padding: 0 4px;
+  margin-bottom: 24px;
+}
+
+.contact-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px;
+  border-radius: 14px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.contact-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.contact-icon-wrapper {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.contact-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.contact-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.contact-desc {
+  font-size: 0.8125rem;
+  color: var(--text-2);
+  line-height: 1.5;
+}
+
+.contact-email {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  margin-top: 4px;
+  transition: opacity 0.15s ease;
+}
+
+.contact-email:hover {
+  opacity: 0.8;
 }
 
 .account-info-card {

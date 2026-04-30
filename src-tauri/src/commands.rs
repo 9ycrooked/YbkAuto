@@ -1,4 +1,4 @@
-use crate::login::{self, DashboardState, SessionState};
+use crate::login::{self, CompletionResult, DashboardState, SessionState};
 use tauri::AppHandle;
 
 #[tauri::command]
@@ -23,4 +23,12 @@ pub async fn refresh_dashboard(app: AppHandle) -> Result<DashboardState, String>
 #[tauri::command]
 pub fn logout_command(app: AppHandle) -> Result<(), String> {
     login::logout(&app)
+}
+
+#[tauri::command]
+pub async fn complete_course_resources(
+    app: AppHandle,
+    ccid: String,
+) -> Result<CompletionResult, String> {
+    login::complete_course_resources(&app, &ccid).await
 }

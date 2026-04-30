@@ -1,8 +1,8 @@
-import { createRouter, createWebHistory } from "vue-router";
+import { createRouter, createWebHashHistory } from "vue-router";
 import { useSessionStore } from "../stores/session";
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHashHistory(),
   routes: [
     {
       path: "/",
@@ -35,16 +35,16 @@ const router = createRouter({
   ],
 });
 
-router.beforeEach((to, _from, next) => {
+router.beforeEach((to, _from) => {
   const sessionStore = useSessionStore();
 
   if (to.meta.requiresAuth && !sessionStore.session.authenticated) {
-    next({ name: "login" });
-  } else if (to.name === "login" && sessionStore.session.authenticated) {
-    next({ name: "dashboard" });
-  } else {
-    next();
+    return { name: "login" };
   }
+  if (to.name === "login" && sessionStore.session.authenticated) {
+    return { name: "dashboard" };
+  }
+  return true;
 });
 
 export default router;

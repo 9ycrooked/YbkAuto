@@ -1,7 +1,15 @@
 <script setup lang="ts">
-import { computed, watch } from "vue";
+import { computed, ref, watch, onErrorCaptured } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useSessionStore } from "./stores/session";
+
+const appError = ref<string | null>(null);
+
+onErrorCaptured((err) => {
+  appError.value = String(err);
+  console.error("[App Error]", err);
+  return false;
+});
 
 const router = useRouter();
 const route = useRoute();
@@ -21,7 +29,7 @@ const navigateTo = (view: string) => {
 watch(
   () => sessionStore.session.authenticated,
   (isAuth) => {
-    if (isAuth && route.name === "login") {
+    if (isAuth) {
       router.push({ name: "dashboard" });
     }
   },
@@ -30,16 +38,30 @@ watch(
 
 <template>
   <main class="app-shell">
+    <div v-if="appError" class="error-overlay">
+      <div class="error-box">
+        <p class="error-label">渲染错误</p>
+        <p class="error-message">{{ appError }}</p>
+        <button class="btn btn-primary" @click="appError = null">重试</button>
+      </div>
+    </div>
     <section v-if="sessionStore.isBootstrapping" class="state-card">
       <p class="eyebrow brand-gradient">YbkAuto</p>
       <h1>正在恢复登录状态</h1>
       <p class="state-copy">稍等一下，我们在帮你检查本地会话。</p>
     </section>
 
+    <section v-else-if="sessionStore.isLoggingIn" class="state-card">
+      <p class="eyebrow brand-gradient">YbkAuto</p>
+      <h1>正在跳转...</h1>
+      <p class="state-copy">登录成功，正在前往课程概览</p>
+      <div class="loading-spinner"></div>
+    </section>
+
     <template v-else-if="!sessionStore.session.authenticated">
-      <router-view v-slot="{ Component }">
+      <router-view v-slot="{ Component, route }">
         <Transition name="page" mode="out-in">
-          <component :is="Component" />
+          <component :is="Component" :key="route.name" />
         </Transition>
       </router-view>
     </template>
@@ -66,9 +88,9 @@ watch(
         </button>
       </nav>
 
-      <router-view v-slot="{ Component }">
+      <router-view v-slot="{ Component, route }">
         <Transition name="page" mode="out-in">
-          <component :is="Component" />
+          <component :is="Component" :key="route.name" />
         </Transition>
       </router-view>
     </section>
@@ -111,6 +133,22 @@ watch(
   font-size: 0.9375rem;
   line-height: 1.6;
   margin-top: 8px;
+}
+
+.state-card .loading-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 24px auto 0;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .eyebrow {
@@ -188,6 +226,61 @@ watch(
 .page-leave-to {
   opacity: 0;
   transform: translateY(-4px);
+}
+
+.error-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 24px;
+}
+
+.error-box {
+  background: var(--surface);
+  border: 1px solid var(--error);
+  border-radius: 16px;
+  padding: 28px;
+  max-width: 500px;
+  width: 100%;
+}
+
+.error-label {
+  font: 600 0.75rem/1 var(--font-mono);
+  color: var(--error);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  margin-bottom: 8px;
+}
+
+.error-message {
+  color: var(--text);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin-bottom: 16px;
+  word-break: break-all;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 9999px;
+  font-family: var(--font-ui);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: var(--accent-dim);
+  color: #ffffff;
 }
 
 @media (max-width: 900px) {

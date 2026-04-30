@@ -1,12 +1,17 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
+import { invoke } from "@tauri-apps/api/core";
 import { useSessionStore } from "../stores/session";
 import AnimatedList from "../components/AnimatedList.vue";
-import type { CourseSummary } from "../types/login";
+import ToastMessage from "../components/ToastMessage.vue";
+import type { CourseSummary, CompletionResult } from "../types/login";
 
 const sessionStore = useSessionStore();
 const completing = ref(false);
 const completionCourseIds = ref<Set<string>>(new Set());
+const toastVisible = ref(false);
+const toastMessage = ref("");
+const toastType = ref<"success" | "error">("success");
 
 const sortedCourses = computed(() => sessionStore.sortedCourses);
 const allCoursesSelected = computed(
@@ -41,88 +46,130 @@ const toggleAllCourses = () => {
 
 const handleComplete = async () => {
   completing.value = true;
-  await new Promise((resolve) => setTimeout(resolve, 1500));
-  completing.value = false;
-  completionCourseIds.value = new Set();
+  try {
+    const courseIds = Array.from(completionCourseIds.value);
+    let overall = { total: 0, completed: 0, failed: [] as string[] };
+
+    for (const ccid of courseIds) {
+      const result = await invoke<CompletionResult>("complete_course_resources", { ccid });
+      overall.total += result.total;
+      overall.completed += result.completed;
+      overall.failed.push(...result.failed);
+    }
+
+    if (overall.total === 0) {
+      toastType.value = "success";
+      toastMessage.value = "完成已选资源！";
+    } else if (overall.completed === overall.total) {
+      toastType.value = "success";
+      toastMessage.value = "成功完成!";
+    } else if (overall.completed > 0) {
+      toastType.value = "success";
+      toastMessage.value = `完成 ${overall.completed}/${overall.total} 个资源`;
+    } else {
+      toastType.value = "error";
+      toastMessage.value = "未成功，请重试！";
+    }
+
+    toastVisible.value = true;
+
+    await sessionStore.refreshDashboard();
+  } catch (error) {
+    toastType.value = "error";
+    toastMessage.value = `操作失败: ${error}`;
+    toastVisible.value = true;
+  } finally {
+    completing.value = false;
+    completionCourseIds.value = new Set();
+  }
 };
 </script>
 
 <template>
-  <div class="completion-layout">
-    <header class="completion-header">
-      <p class="eyebrow">资源完成</p>
-      <p class="completion-desc">选择要处理的课程，一键标记资源完成。</p>
-    </header>
-    <div class="completion-body">
-      <div class="course-select-panel">
-        <div class="course-select-header">
-          <h3 class="course-select-title">选择课程</h3>
-          <label class="course-select-all">
-            <input
-              type="checkbox"
-              :checked="allCoursesSelected"
-              :indeterminate="
-                completionCourseIds.size > 0 && !allCoursesSelected
+  <div class="completion-wrapper">
+    <div class="completion-layout">
+      <header class="completion-header">
+        <p class="eyebrow">资源完成</p>
+        <p class="completion-desc">选择要处理的课程，一键标记资源完成。</p>
+      </header>
+      <div class="completion-body">
+        <div class="course-select-panel">
+          <div class="course-select-header">
+            <h3 class="course-select-title">选择课程</h3>
+            <label class="course-select-all">
+              <input
+                type="checkbox"
+                :checked="allCoursesSelected"
+                :indeterminate="
+                  completionCourseIds.size > 0 && !allCoursesSelected
+                "
+                @change="toggleAllCourses"
+              />
+              <span>全选</span>
+            </label>
+            <span class="course-count-badge"
+              >{{ completionCourseIds.size }} /
+              {{ sortedCourses.length }}</span
+            >
+          </div>
+          <div class="course-select-body">
+            <AnimatedList
+              v-if="sortedCourses.length"
+              :items="
+                sortedCourses.map((c: CourseSummary) => ({
+                  id: c.clazzCourseId,
+                  label: c.courseName,
+                  subLabel: c.teacherName,
+                }))
               "
-              @change="toggleAllCourses"
+              :selected-ids="completionCourseIds"
+              :show-gradients="true"
+              :enable-arrow-navigation="true"
+              @item-selected="onAnimatedItemSelected"
             />
-            <span>全选</span>
-          </label>
-          <span class="course-count-badge"
-            >{{ completionCourseIds.size }} /
-            {{ sortedCourses.length }}</span
-          >
+            <p v-else class="completion-empty">暂无可选课程</p>
+          </div>
         </div>
-        <div class="course-select-body">
-          <AnimatedList
-            v-if="sortedCourses.length"
-            :items="
-              sortedCourses.map((c: CourseSummary) => ({
-                id: c.clazzCourseId,
-                label: c.courseName,
-                subLabel: c.teacherName,
-              }))
-            "
-            :selected-ids="completionCourseIds"
-            :show-gradients="true"
-            :enable-arrow-navigation="true"
-            @item-selected="onAnimatedItemSelected"
-          />
-          <p v-else class="completion-empty">暂无可选课程</p>
-        </div>
-      </div>
-      <div class="completion-action-panel">
-        <button
-          class="btn btn-primary btn-complete"
-          :disabled="completionCourseIds.size === 0 || completing"
-          @click="handleComplete"
-        >
-          <svg
-            :class="{ spinning: completing }"
-            width="18"
-            height="18"
-            viewBox="0 0 18 18"
-            fill="none"
-            style="display: block"
+        <div class="completion-action-panel">
+          <button
+            class="btn btn-primary btn-complete"
+            :disabled="completionCourseIds.size === 0 || completing"
+            @click="handleComplete"
           >
-            <path
-              d="M14.5 9a5.5 5.5 0 01-10.4 2.5M3.5 9a5.5 5.5 0 0110.4-2.5"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-            />
-            <path
-              d="M14.5 3.5v3h-3M3.5 14.5v-3h3"
-              stroke="currentColor"
-              stroke-width="1.5"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </svg>
-          {{ completing ? "处理中..." : "一键完成资源" }}
-        </button>
+            <svg
+              :class="{ spinning: completing }"
+              width="18"
+              height="18"
+              viewBox="0 0 18 18"
+              fill="none"
+              style="display: block"
+            >
+              <path
+                d="M14.5 9a5.5 5.5 0 01-10.4 2.5M3.5 9a5.5 5.5 0 0110.4-2.5"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+              />
+              <path
+                d="M14.5 3.5v3h-3M3.5 14.5v-3h3"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            {{ completing ? "处理中..." : "一键完成资源" }}
+          </button>
+        </div>
       </div>
     </div>
+
+    <ToastMessage
+      :visible="toastVisible"
+      :message="toastMessage"
+      :type="toastType"
+      @close="toastVisible = false"
+    />
   </div>
 </template>
 

@@ -3,6 +3,12 @@ export type ResourceState = {
   incomplete: number;
 };
 
+export type CompletionResult = {
+  total: number;
+  completed: number;
+  failed: string[];
+};
+
 export type CourseSummary = {
   clazzCourseId: string;
   courseName: string;

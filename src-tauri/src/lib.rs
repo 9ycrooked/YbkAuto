@@ -10,7 +10,8 @@ pub fn run() {
             commands::bootstrap_session,
             commands::login_command,
             commands::refresh_dashboard,
-            commands::logout_command
+            commands::logout_command,
+            commands::complete_course_resources
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
