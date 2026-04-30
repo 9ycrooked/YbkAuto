@@ -6,10 +6,6 @@ const props = defineProps<{
 
 const modelValue = defineModel<string>({ default: "" })
 
-const onInput = (event: Event) => {
-  modelValue.value = (event.target as HTMLInputElement).value
-}
-
 const labelChars = props.label.split('')
 </script>
 
@@ -18,8 +14,7 @@ const labelChars = props.label.split('')
     <input
       :type="type || 'text'"
       required
-      :value="modelValue"
-      @input="onInput"
+      v-model="modelValue"
       autocomplete="off"
     >
     <label>
