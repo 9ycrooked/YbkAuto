@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cargo check *)",
+      "Bash(python3 \"C:/Users/Y/.claude/skills/ui-ux-pro-max/scripts/search.py\" \"desktop utility tool contact\" --design-system -p \"YbkAuto About\")",
+      "Bash(yarn build *)",
+      "Bash(npm run *)",
+      "Bash(npx vite *)",
+      "Bash(python3 *)"
+    ]
+  }
+}
