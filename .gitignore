@@ -19,6 +19,10 @@ src-tauri/src/1
 src-tauri/src/班课
 src-tauri/src/test_rq.rs
 
+# Debug and temporary files
+nul
+src-tauri/resources_response.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
