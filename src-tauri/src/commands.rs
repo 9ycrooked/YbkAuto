@@ -10,9 +10,9 @@ pub async fn bootstrap_session(app: AppHandle) -> Result<SessionState, String> {
 pub async fn login_command(
     app: AppHandle,
     username: String,
-    password: String,
+    ciphertext: String,
 ) -> Result<SessionState, String> {
-    login::login_and_build_session(&app, username, password).await
+    login::login_and_build_session(&app, username, ciphertext).await
 }
 
 #[tauri::command]

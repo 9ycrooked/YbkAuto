@@ -6,10 +6,10 @@ export type ResourceState = {
 export type CourseSummary = {
   clazzCourseId: string;
   courseName: string;
-  className: string;
+  className: string | null;
   teacherName: string;
   courseStatus: string;
-  createTime: string;
+  createTime: string | null;
   resourceState: ResourceState;
 };
 

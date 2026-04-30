@@ -7,12 +7,18 @@ const cardsRevealed = ref(false);
 
 const courses = computed(() => sessionStore.courses);
 
+let revealFallback: ReturnType<typeof setTimeout> | null = null;
+
 const triggerCardReveal = () => {
   cardsRevealed.value = false;
+  if (revealFallback) clearTimeout(revealFallback);
   nextTick(() => {
     requestAnimationFrame(() => {
       cardsRevealed.value = true;
     });
+    revealFallback = setTimeout(() => {
+      if (!cardsRevealed.value) cardsRevealed.value = true;
+    }, 120);
   });
 };
 
@@ -103,7 +109,7 @@ const onRefresh = () => {
       >
         <div class="course-card__top">
           <div>
-            <p class="course-class">{{ course.className }}</p>
+            <p class="course-class">{{ course.className ?? "" }}</p>
             <h2>{{ course.courseName }}</h2>
             <p class="course-teacher">{{ course.teacherName }}</p>
           </div>

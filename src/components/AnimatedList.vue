@@ -110,8 +110,9 @@ watch(
 
 onMounted(() => {
   if (props.enableArrowNavigation) window.addEventListener("keydown", handleKeyDown);
-  itemsInView.value = new Array(props.items.length).fill(true);
-  setTimeout(updateItemsInView, 120);
+  requestAnimationFrame(() => {
+    updateItemsInView();
+  });
 });
 
 onUnmounted(() => {

@@ -37,7 +37,11 @@ watch(
     </section>
 
     <template v-else-if="!sessionStore.session.authenticated">
-      <router-view />
+      <router-view v-slot="{ Component }">
+        <Transition name="page" mode="out-in">
+          <component :is="Component" />
+        </Transition>
+      </router-view>
     </template>
 
     <section v-else class="dashboard-layout">
@@ -62,7 +66,11 @@ watch(
         </button>
       </nav>
 
-      <router-view />
+      <router-view v-slot="{ Component }">
+        <Transition name="page" mode="out-in">
+          <component :is="Component" />
+        </Transition>
+      </router-view>
     </section>
   </main>
 </template>
@@ -163,6 +171,23 @@ watch(
   background: var(--surface);
   color: var(--text);
   box-shadow: 0 1px 3px rgba(var(--shadow-color), calc(var(--shadow-strength) * 1));
+}
+
+.page-enter-active,
+.page-leave-active {
+  transition:
+    opacity 0.2s var(--ease),
+    transform 0.2s var(--ease);
+}
+
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+.page-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
 }
 
 @media (max-width: 900px) {

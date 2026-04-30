@@ -19,7 +19,10 @@ export const useSessionStore = defineStore("session", () => {
 
   const courses = computed(() => session.value.dashboard?.courses ?? []);
   const sortedCourses = computed(() =>
-    [...courses.value].sort((a, b) => b.createTime.localeCompare(a.createTime)),
+    [...courses.value].sort((a, b) => {
+      if (!a.createTime || !b.createTime) return 0;
+      return b.createTime.localeCompare(a.createTime);
+    }),
   );
   const totalCompletedResources = computed(() =>
     courses.value.reduce((count, course) => count + course.resourceState.completed, 0),

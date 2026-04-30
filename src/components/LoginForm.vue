@@ -6,6 +6,7 @@ import InputBox from "./FloatingLabelInput.vue";
 import LoginButton from "./LoginButton.vue";
 import ToastMessage from "./ToastMessage.vue";
 import type { SessionState } from "../types/login";
+import { encryptPassword } from "../utils/crypto";
 
 const props = defineProps<{
   rememberedUsername?: string;
@@ -39,15 +40,20 @@ const handleLogin = async () => {
   isLoading.value = true;
 
   try {
+    console.log("[LoginForm] Starting login for:", username.value);
+    const ciphertext = await encryptPassword(username.value, password.value);
+    console.log("[LoginForm] Got ciphertext, calling backend...");
     const session = await invoke<SessionState>("login_command", {
       username: username.value,
-      password: password.value,
+      ciphertext: ciphertext,
     });
+    console.log("[LoginForm] Login success!");
 
     password.value = "";
     emit("loginSuccess", session);
   } catch (error) {
-    toastMessage.value = "账号或密码错误";
+    console.error("[LoginForm] Login error:", error);
+    toastMessage.value = String(error);
     showToast.value = true;
   } finally {
     isLoading.value = false;

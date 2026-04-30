@@ -80,7 +80,7 @@ const handleComplete = async () => {
               sortedCourses.map((c: CourseSummary) => ({
                 id: c.clazzCourseId,
                 label: c.courseName,
-                subLabel: c.className + ' · ' + c.teacherName,
+                subLabel: c.teacherName,
               }))
             "
             :selected-ids="completionCourseIds"

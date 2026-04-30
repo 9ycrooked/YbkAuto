@@ -1,7 +1,6 @@
 mod api;
 mod commands;
 mod login;
-mod request_signer;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
