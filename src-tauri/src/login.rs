@@ -1,19 +1,24 @@
-use crate::api::{URL_CC_LIST_JOINED, URL_LOGIN};
+use crate::api::{URL_CC_LIST_JOINED, URL_CC_RESOURCE_LIST, URL_LOGIN};
 use reqwest::{
     header::{HeaderMap, HeaderValue},
     Client,
 };
 use serde::{Deserialize, Serialize};
 use std::{
+    collections::HashMap,
     fs,
     path::{Path, PathBuf},
+    sync::Arc,
 };
+use futures::future::join_all;
 use tauri::{AppHandle, Manager};
+use tokio::sync::Semaphore;
 
 const SESSION_FILE_NAME: &str = "session.json";
 
+#[derive(Clone)]
 pub struct MosoteachClient {
-    http_client: Client,
+    http_client: Arc<Client>,
     user: Option<User>,
     user_id: Option<String>,
     token: Option<String>,
@@ -133,6 +138,21 @@ pub struct CourseCreater {
     pub user_id: String,
 }
 
+#[derive(Debug, Deserialize)]
+struct ResourceListResponse {
+    resources: Vec<ResourceItem>,
+}
+
+#[derive(Debug, Deserialize)]
+struct ResourceItem {
+    #[serde(alias = "id")]
+    _id: String,
+    #[serde(alias = "score")]
+    score: Option<f64>,
+    #[serde(alias = "obtainScore")]
+    obtain_score: Option<f64>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ResourceState {
@@ -250,7 +270,7 @@ impl MosoteachClient {
             .expect("无法创建 HTTP 客户端");
 
         Self {
-            http_client,
+            http_client: Arc::new(http_client),
             user: None,
             user_id: None,
             token: None,
@@ -285,9 +305,6 @@ impl MosoteachClient {
             "ciphertext": ciphertext
         });
 
-        println!("[Login] POST {}", url);
-        println!("[Login] Body: account={}, ciphertext={}", username, ciphertext);
-
         let response = self
             .http_client
             .post(&url)
@@ -297,21 +314,14 @@ impl MosoteachClient {
             .await
             .map_err(|error| format!("网络请求失败: {}", error))?;
 
-        let status = response.status();
         let body_text = response.text().await.map_err(|e| format!("读取响应失败: {}", e))?;
 
-        println!("[Login] Response status: {}", status);
-        println!("[Login] Response body: {}", body_text);
-
         if !body_text.starts_with('{') {
-            return Err(format!("服务器返回非JSON响应 (状态码: {}): {}", status, body_text));
+            return Err(format!("服务器返回非JSON响应: {}", body_text));
         }
 
         let login_response: LoginApiResponse = serde_json::from_str(&body_text)
-            .map_err(|e| {
-                println!("[Login] JSON parse error: {}", e);
-                format!("JSON解析失败: {}", e)
-            })?;
+            .map_err(|e| format!("JSON解析失败: {}", e))?;
 
         if !login_response.status {
             return Err(format!("登录失败"));
@@ -338,8 +348,38 @@ impl MosoteachClient {
 
         let url = format!("{}?_ts={}", URL_CC_LIST_JOINED, timestamp);
 
-        println!("[ListCourse] GET {}", url);
-        println!("[ListCourse] Using token: {}", token);
+        let response = self
+            .http_client
+            .get(&url)
+            .header("x-token", token)
+            .send()
+            .await
+            .map_err(|error| format!("获取课程列表失败: {}", error))?;
+
+        let body_text = response.text().await.map_err(|e| format!("读取课程响应失败: {}", e))?;
+
+        let course_response: CourseListApiResponse = serde_json::from_str(&body_text)
+            .map_err(|error| format!("课程JSON解析失败: {}", error))?;
+
+        Ok(course_response.clazz_courses)
+    }
+
+    pub async fn list_resources(&self, ccid: &str) -> Result<Vec<ResourceItem>, String> {
+        let token = self
+            .token
+            .as_deref()
+            .ok_or_else(|| "token 未登录".to_string())?;
+
+        let timestamp = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_millis()
+            .to_string();
+
+        let url = format!(
+            "{}/{}/resources?roleId=2&_ts={}",
+            URL_CC_RESOURCE_LIST, ccid, timestamp
+        );
 
         let response = self
             .http_client
@@ -347,30 +387,14 @@ impl MosoteachClient {
             .header("x-token", token)
             .send()
             .await
-            .map_err(|error| {
-                println!("[ListCourse] Request error: {}", error);
-                error.to_string()
-            })?;
+            .map_err(|e| format!("获取资源列表失败: {}", e))?;
 
-        let status = response.status();
+        let body_text = response.text().await.map_err(|e| format!("读取资源响应失败: {}", e))?;
 
-        let body_text = response.text().await.map_err(|e| {
-            println!("[ListCourse] Read body error: {}", e);
-            e.to_string()
-        })?;
+        let result: ResourceListResponse =
+            serde_json::from_str(&body_text).map_err(|e| format!("资源JSON解析失败: {}", e))?;
 
-        println!("[ListCourse] Response status: {}", status);
-        println!("[ListCourse] Response body: {}", body_text);
-
-        let course_response: CourseListApiResponse = serde_json::from_str(&body_text)
-            .map_err(|error| {
-                println!("[ListCourse] JSON parse error: {}", error);
-                error.to_string()
-            })?;
-
-        println!("[ListCourse] Parsed {} courses", course_response.clazz_courses.len());
-
-        Ok(course_response.clazz_courses)
+        Ok(result.resources)
     }
 }
 
@@ -489,18 +513,44 @@ fn write_json_file<T: Serialize>(path: &Path, data: &T) -> Result<(), String> {
     fs::write(path, content).map_err(|error| error.to_string())
 }
 
+fn is_resource_completed(r: &ResourceItem) -> bool {
+    let score = r.score.unwrap_or(0.0);
+    let obtain = r.obtain_score.unwrap_or(-1.0);
+    score > 0.0 && obtain >= score
+}
+
 async fn build_dashboard(client: &MosoteachClient) -> Result<DashboardState, String> {
     let courses = client.list_course().await?;
+    let sem = Arc::new(Semaphore::new(10));
+
+    let futures = courses.iter().map(|course| {
+        let sem = sem.clone();
+        let client = client.clone();
+        let ccid = course.id.clone();
+        async move {
+            let _permit = sem.acquire().await.unwrap();
+            let resources = client.list_resources(&ccid).await.unwrap_or_default();
+            let completed = resources.iter().filter(|r| is_resource_completed(r)).count();
+            let incomplete = resources.len() - completed;
+            (course.id.clone(), ResourceState { completed, incomplete })
+        }
+    });
+
+    let results: HashMap<String, ResourceState> = join_all(futures)
+        .await
+        .into_iter()
+        .collect();
+
     let course_summaries = courses
         .into_iter()
         .map(|c| CourseSummary {
-            clazzCourseId: c.id,
-            courseName: c.course.name,
-            className: Some(c.clazz.name),
+            clazzCourseId: c.id.clone(),
+            courseName: c.course.name.clone(),
+            className: Some(c.clazz.name.clone()),
             teacherName: c.creater.as_ref().map(|cr| cr.full_name.clone()).unwrap_or_default(),
-            courseStatus: c.status.unwrap_or_default(),
-            createTime: c.create_time,
-            resourceState: ResourceState::default(),
+            courseStatus: c.status.clone().unwrap_or_default(),
+            createTime: c.create_time.clone(),
+            resourceState: results.get(&c.id).cloned().unwrap_or_default(),
         })
         .collect();
 
@@ -542,7 +592,14 @@ mod tests {
           "clazzCourses": [
             {
               "id": "course-1",
-              "courseName": "现代设计史",
+              "course": {
+                "name": "现代设计史",
+                "id": "c-1"
+              },
+              "clazz": {
+                "name": "环设23级",
+                "id": "clazz-1"
+              },
               "fullCoverUrl": "https://example.com/cover.png",
               "creater": {
                 "fullName": "李媛",
@@ -556,7 +613,8 @@ mod tests {
         let response: CourseListApiResponse = serde_json::from_str(payload).unwrap();
 
         assert_eq!(response.clazz_courses.len(), 1);
-        assert_eq!(response.clazz_courses[0].course_name, "现代设计史");
+        assert_eq!(response.clazz_courses[0].course.name, "现代设计史");
+        assert_eq!(response.clazz_courses[0].clazz.name, "环设23级");
     }
 
     #[test]
