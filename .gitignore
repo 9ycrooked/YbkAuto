@@ -15,13 +15,6 @@ dist-ssr
 .yarn/unplugged
 src-tauri/target
 src-tauri/gen/schemas
-src-tauri/src/1
-src-tauri/src/班课
-src-tauri/src/test_rq.rs
-
-# Debug and temporary files
-nul
-src-tauri/resources_response.json
 
 # Editor directories and files
 .vscode/*
@@ -33,3 +26,11 @@ src-tauri/resources_response.json
 *.njsproj
 *.sln
 *.sw?
+
+# Windows special names
+nul
+~
+
+# Tauri signing keys (store securely elsewhere)
+*.key
+*.key.pub
