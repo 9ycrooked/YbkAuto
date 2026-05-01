@@ -7,6 +7,10 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Windows special names
+nul
+~
+
 node_modules
 dist
 dist-ssr
@@ -15,9 +19,6 @@ dist-ssr
 .yarn/unplugged
 src-tauri/target
 src-tauri/gen/schemas
-src-tauri/src/1
-src-tauri/src/班课
-src-tauri/src/test_rq.rs
 
 # Editor directories and files
 .vscode/*
