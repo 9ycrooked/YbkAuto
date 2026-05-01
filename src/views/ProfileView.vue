@@ -117,7 +117,7 @@ const handleLogout = async () => {
             <div class="about-info">
               <p class="about-name">YbkAuto</p>
               <p class="about-version">版本 0.1.0</p>
-              <p class="about-desc">云班课桌面助手 — 课程管理、签到提醒、资源追踪</p>
+              <p class="about-desc">云班课桌面助手 — 课程管理、资源追踪、资源完成</p>
             </div>
           </div>
           <p class="about-tech">技术栈: Tauri v2 · Vue 3 · TypeScript · Rust</p>
