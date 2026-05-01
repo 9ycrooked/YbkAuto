@@ -1,0 +1,174 @@
+# .gitee-ci.yml
+# Gitee Go 流水线：Tauri Windows 构建 + 签名 + Release 发布
+
+stages:
+  - build
+  - release
+
+variables:
+  # 前端构建用 Node 20
+  NODE_VERSION: "20"
+  # Rust 工具链
+  RUST_TOOLCHAIN: "stable"
+  # 缓存路径
+  YARN_CACHE_FOLDER: "$CI_PROJECT_DIR/.yarn/cache"
+
+# 全局缓存策略
+cache:
+  key: "${CI_COMMIT_REF_SLUG}"
+  paths:
+    - node_modules/
+    - src-tauri/target/
+    - .yarn/cache/
+
+# ========== 阶段一：构建 ==========
+build-windows:
+  stage: build
+  # Gitee Go 的可用镜像需确认，建议用 ubuntu-latest 并通过 wine 交叉编译，或直接指定 windows 镜像
+  image: windows-latest
+  # 只在推送标签时触发
+  only:
+    - /^v.*$/
+  before_script:
+    # 显示环境信息（调试用）
+    - echo "当前分支/标签: ${CI_COMMIT_REF_NAME}"
+    # 如果需要确认 Node/Rust 版本，可取消注释下一行
+    # - node -v && rustc --version
+  script:
+    # 1. 安装前端依赖
+    - yarn install --frozen-lockfile
+    # 2. 构建 Tauri 应用（使用密钥签名）
+    - npm run tauri build
+  artifacts:
+    # 将构建产物传递给下一阶段
+    paths:
+      - src-tauri/target/release/bundle/nsis/*.exe
+      - src-tauri/target/release/bundle/nsis/*.sig
+      - src-tauri/target/release/bundle/nsis/*.zip*
+      - src-tauri/target/release/bundle/msi/*.msi
+      - src-tauri/target/release/bundle/msi/*.sig
+      - src-tauri/target/release/bundle/msi/*.zip*
+    expire_in: 1 day
+
+# ========== 阶段二：发布 ==========
+release-gitee:
+  stage: release
+  image: ubuntu-latest
+  only:
+    - /^v.*$/
+  dependencies:
+    - build-windows
+  before_script:
+    # 安装 PowerShell (pwsh) 用于查找文件和生成 JSON
+    - apt-get update && apt-get install -y powershell
+  script:
+    # 1. 查找构建包
+    - |
+      pwsh -Command "
+      \$nsisDir = 'src-tauri/target/release/bundle/nsis';
+      \$msiDir = 'src-tauri/target/release/bundle/msi';
+      \$pkgName = '';
+      \$sigPath = '';
+      
+      if (Test-Path \$nsisDir) {
+        \$zip = Get-ChildItem \$nsisDir -Filter '*.nsis.zip' | Select-Object -First 1;
+        if (\$zip) {
+          \$pkgName = \$zip.Name;
+          \$sigPath = \$zip.FullName + '.sig';
+        }
+      }
+      
+      if (\$pkgName -eq '' -and (Test-Path \$msiDir)) {
+        \$zip = Get-ChildItem \$msiDir -Filter '*.msi.zip' | Select-Object -First 1;
+        if (\$zip) {
+          \$pkgName = \$zip.Name;
+          \$sigPath = \$zip.FullName + '.sig';
+        }
+      }
+      
+      if (\$pkgName -eq '') {
+        Write-Host 'Error: No update package found!';
+        exit 1;
+      }
+      
+      # 将变量导出给后续步骤使用
+      Write-Output \"PKG_NAME=\$pkgName\" >> \$env:GITEE_ENV;
+      Write-Output \"SIG_PATH=\$sigPath\" >> \$env:GITEE_ENV;
+      Write-Host \"Found package: \$pkgName\";
+      "
+
+    # 2. 生成 updater.json
+    - |
+      pwsh -Command "
+      \$version = '${CI_COMMIT_REF_NAME}'.TrimStart('v');
+      \$sigPath = \$env:SIG_PATH;
+      
+      if (-not (Test-Path \$sigPath)) {
+        Write-Host \"Error: Signature file not found at \$sigPath\";
+        exit 1;
+      }
+      
+      \$signature = Get-Content \$sigPath -Raw;
+      
+      \$repoOwner = 'crooked9y';
+      \$repoName = 'ybk-auto';
+      \$downloadBase = \"https://gitee.com/\$repoOwner/\$repoName/releases/download/${CI_COMMIT_REF_NAME}\";
+      
+      \$updaterJson = @{
+        version = \$version;
+        platforms = @{
+          'windows-x86_64' = @{
+            signature = \$signature.Trim();
+            url = \"\$downloadBase/\$env:PKG_NAME\";
+          };
+        };
+      };
+      
+      \$updaterJson | ConvertTo-Json -Depth 3 | Out-File -FilePath 'updater.json' -Encoding UTF8;
+      Get-Content updater.json;
+      "
+
+    # 3. 上传到 Gitee Release
+    # 注意：Gitee Go 原生 release-upload 组件需确认，这里用 API 方式作为备选
+    - |
+      pwsh -Command "
+      \$tag = '${CI_COMMIT_REF_NAME}';
+      \$token = '${GITEE_ACCESS_TOKEN}';  # 需要在 Gitee Go 界面配置的私人令牌
+      \$repoOwner = 'crooked9y';
+      \$repoName = 'ybk-auto';
+      
+      # 创建 Release
+      \$body = @{
+        tag_name = \$tag;
+        name = \"Release \$tag\";
+        body = \"自动构建发布\";
+        target_commitish = 'main';
+        draft = \$false;
+        prerelease = \$false;
+      } | ConvertTo-Json;
+      
+      \$createReleaseUrl = \"https://gitee.com/api/v5/repos/\$repoOwner/\$repoName/releases\";
+      \$release = Invoke-RestMethod -Uri \$createReleaseUrl -Method Post -Headers @{Authorization = \"Bearer \$token\"} -Body \$body -ContentType 'application/json';
+      Write-Host \"Release created: \$release.html_url\";
+      
+      # 上传资产
+      \$assets = @(
+        'src-tauri/target/release/bundle/nsis/*.exe',
+        'src-tauri/target/release/bundle/nsis/*.sig',
+        'src-tauri/target/release/bundle/nsis/*.zip*',
+        'src-tauri/target/release/bundle/msi/*.msi',
+        'src-tauri/target/release/bundle/msi/*.sig',
+        'src-tauri/target/release/bundle/msi/*.zip*',
+        'updater.json'
+      );
+      
+      foreach (\$pattern in \$assets) {
+        Get-ChildItem -Path \$pattern | ForEach-Object {
+          \$uploadUrl = \"https://gitee.com/api/v5/repos/\$repoOwner/\$repoName/releases/\$(\$release.id)/assets\";
+          Write-Host \"Uploading: \$(\$_.Name)\";
+          Invoke-RestMethod -Uri \$uploadUrl -Method Post -Headers @{Authorization = \"Bearer \$token\"} -Form @{file=Get-Item \$_.FullName};
+        }
+      }
+      "
+  only:
+    - /^v.*$/
