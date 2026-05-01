@@ -4,7 +4,9 @@ import { invoke } from "@tauri-apps/api/core";
 
 import InputBox from "./FloatingLabelInput.vue";
 import LoginButton from "./LoginButton.vue";
+import ToastMessage from "./ToastMessage.vue";
 import type { SessionState } from "../types/login";
+import { encryptPassword } from "../utils/crypto";
 
 const props = defineProps<{
   rememberedUsername?: string;
@@ -18,6 +20,8 @@ const username = ref("");
 const password = ref("");
 const loginError = ref("");
 const isLoading = ref(false);
+const showToast = ref(false);
+const toastMessage = ref("");
 
 watch(
   () => props.rememberedUsername,
@@ -36,16 +40,21 @@ const handleLogin = async () => {
   isLoading.value = true;
 
   try {
+    console.log("[LoginForm] Starting login for:", username.value);
+    const ciphertext = await encryptPassword(username.value, password.value);
+    console.log("[LoginForm] Got ciphertext, calling backend...");
     const session = await invoke<SessionState>("login_command", {
       username: username.value,
-      password: password.value,
+      ciphertext: ciphertext,
     });
+    console.log("[LoginForm] Login success!");
 
     password.value = "";
     emit("loginSuccess", session);
   } catch (error) {
-    loginError.value =
-      typeof error === "string" ? error : "登录失败，请稍后再试";
+    console.error("[LoginForm] Login error:", error);
+    toastMessage.value = String(error);
+    showToast.value = true;
   } finally {
     isLoading.value = false;
   }
@@ -65,6 +74,13 @@ const handleLogin = async () => {
       label="登录"
     />
   </form>
+
+  <ToastMessage
+    :visible="showToast"
+    :message="toastMessage"
+    type="error"
+    @close="showToast = false"
+  />
 </template>
 
 <style scoped>
@@ -77,7 +93,7 @@ const handleLogin = async () => {
 
 .login-error {
   margin: -0.25rem 0 0;
-  color: #ff9ca6;
+  color: var(--error);
   font-size: 0.92rem;
   text-align: left;
 }

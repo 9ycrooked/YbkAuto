@@ -30,3 +30,11 @@ src-tauri/gen/schemas
 *.njsproj
 *.sln
 *.sw?
+
+# Windows special names
+nul
+~
+
+# Tauri signing keys (store securely elsewhere)
+*.key
+*.key.pub

@@ -290,6 +290,80 @@ body {
 }
 ```
 
+### Toast Message
+
+```css
+.toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  max-width: min(380px, calc(100vw - 32px));
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: 0 2px 12px rgba(var(--shadow-color), calc(var(--shadow-strength) * 2));
+}
+.toast__icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  color: var(--error); /* or success/info */
+}
+.toast__message {
+  flex: 1;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--text);
+}
+.toast__close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-4);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.toast__close:hover {
+  background: var(--surface-hover);
+  color: var(--text-2);
+}
+
+.toast-enter-active {
+  animation: toastIn 0.22s var(--ease-cinema) forwards;
+}
+.toast-leave-active {
+  animation: toastOut 0.18s var(--ease) forwards;
+}
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(-8px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+@keyframes toastOut {
+  from { opacity: 1; transform: translateX(-50%) translateY(0); }
+  to { opacity: 0; transform: translateX(-50%) translateY(-6px); }
+}
+```
+
+**Rules:**
+- 仅使用 `opacity` + `transform` 实现动画（无 scale）
+- 入场 220ms / 退场 180ms（exit faster than enter）
+- 自动消失时间 4s
+- 无 `backdrop-filter`——纯 surface + 边框
+- `z-index: 9999`，固定在最顶层
+
 ### Info Row (key-value inside cards)
 
 ```css
@@ -493,6 +567,11 @@ export function useReveal(threshold = 0.1): { elRef: Ref<HTMLElement | null>; is
 }
 ```
 
+| Animation | Duration | Easing / Notes |
+|-----------|----------|----------------|
+| Loading State | shimmer skeleton | `@keyframes shimmer` 1.5s ease-in-out infinite |
+| Toast | 入场 220ms / 退场 180ms | `toastIn` / `toastOut`，exit faster than enter |
+
 ### Reduced Motion
 
 ```css
@@ -512,6 +591,10 @@ export function useReveal(threshold = 0.1): { elRef: Ref<HTMLElement | null>; is
     transform: none;
     animation: none !important;
   }
+  .toast-enter-active,
+  .toast-leave-active {
+    animation-duration: 0.01ms;
+  }
 }
 ```
 
@@ -529,6 +612,7 @@ export function useReveal(threshold = 0.1): { elRef: Ref<HTMLElement | null>; is
 
 ### Don't
 - ❌ 大面积使用 `backdrop-filter: blur()`——仅登录卡片可用，值 ≤ 8px
+- ❌ Toast 组件使用 `backdrop-filter`——纯 surface + 边框即可
 - ❌ 在移动元素上使用 `filter: blur()` 做景深——用 opacity + scale 替代
 - ❌ 硬编码任何 hex 颜色值到组件中——必须通过 CSS 变量
 - ❌ 使用超过 2 个强调色——accent 只有蓝色一个

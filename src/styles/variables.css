@@ -1,0 +1,163 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400..700&family=Noto+Sans+SC:wght@400..700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  --bg: #f5f5f7;
+  --bg-rgb: 245, 245, 247;
+  --bg-2: #eeedf2;
+  --surface: #ffffff;
+  --surface-rgb: 255, 255, 255;
+  --surface-hover: #f0f0f4;
+  --surface-2: #f8f8fc;
+  --border: #e0dee8;
+  --border-rgb: 224, 222, 232;
+  --border-strong: rgba(0, 0, 0, 0.12);
+  --text: #1a1a20;
+  --text-rgb: 26, 26, 32;
+  --text-2: #4f4e5c;
+  --text-3: #8684a0;
+  --text-4: #b0aec4;
+  --accent: #3b82f6;
+  --accent-rgb: 59, 130, 246;
+  --accent-soft: rgba(59, 130, 246, 0.10);
+  --accent-dim: #2563eb;
+  --accent-hover-dim: #3b82f6;
+  --accent-cool: #6366f1;
+  --accent-cool-rgb: 99, 102, 241;
+  --accent-cool-soft: rgba(99, 102, 241, 0.08);
+  --accent-warm: #f97316;
+  --accent-warm-rgb: 249, 115, 22;
+  --gradient-key: linear-gradient(135deg, #3b82f6 0%, #f97316 100%);
+  --success: #22c55e;
+  --success-rgb: 34, 197, 94;
+  --warning: #f97316;
+  --warning-rgb: 249, 115, 22;
+  --error: #ef4444;
+  --error-rgb: 239, 68, 68;
+  --shadow-color: 0, 0, 0;
+  --shadow-strength: 6%;
+  --ease: cubic-bezier(.2, 0, 0, 1);
+  --ease-cinema: cubic-bezier(.16, 1, .3, 1);
+  --font-ui: 'DM Sans', 'Noto Sans SC', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0a0b0e;
+    --bg-rgb: 10, 11, 14;
+    --bg-2: #07080b;
+    --surface: #111217;
+    --surface-rgb: 17, 18, 23;
+    --surface-hover: #1a1c25;
+    --surface-2: #171921;
+    --border: rgba(67, 70, 81, 0.5);
+    --border-rgb: 67, 70, 81;
+    --border-strong: rgba(67, 70, 81, 0.9);
+    --text: #ebecef;
+    --text-rgb: 235, 236, 239;
+    --text-2: #c6c9d2;
+    --text-3: #8d909c;
+    --text-4: #60636f;
+    --accent: #5EEAD4;
+    --accent-rgb: 94, 234, 212;
+    --accent-soft: rgba(94, 234, 212, 0.12);
+    --accent-dim: #3b9e8e;
+    --accent-hover-dim: #47b8a5;
+    --accent-cool: #818cf8;
+    --accent-cool-rgb: 129, 140, 248;
+    --accent-cool-soft: rgba(129, 140, 248, 0.08);
+    --accent-warm: #FB923C;
+    --accent-warm-rgb: 251, 146, 60;
+    --gradient-key: linear-gradient(135deg, #5EEAD4 0%, #FB923C 100%);
+    --success: #30d158;
+    --warning: #ffd60a;
+    --warning-rgb: 255, 214, 10;
+    --error: #ff453a;
+    --shadow-strength: 24%;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+body {
+  font-family: var(--font-ui);
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  text-size-adjust: 100%;
+  scrollbar-width: none;
+}
+
+body::-webkit-scrollbar {
+  display: none;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+#app {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .course-card {
+    opacity: 1;
+    transform: none;
+    transition-delay: 0s !important;
+  }
+  .course-card::before {
+    display: none;
+  }
+  .magnetic-btn:hover {
+    transform: none !important;
+  }
+  .summary-strip {
+    opacity: 1;
+    transform: none;
+    animation: none !important;
+  }
+  .brand-gradient {
+    animation: none !important;
+  }
+  .aurora-bg {
+    display: none;
+  }
+  .animated-list-item {
+    opacity: 1;
+    transform: none;
+    transition-delay: 0s !important;
+  }
+}
