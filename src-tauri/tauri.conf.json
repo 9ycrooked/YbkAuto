@@ -34,5 +34,14 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ]
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://你的更新服务器地址.com/check-update/{{target}}/{{arch}}/{{current_version}}"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDExQ0ZEMkU3RDdCRDVDOEYKUldTUFhMM1g1OUxQRVRCWnptMUl2Q2NERnhoalVpRmxyUU84NzhXUW5EME11d2xZeWxrY3Z3Zm8K",
+      "createUpdaterArtifacts": true
+    }
   }
 }

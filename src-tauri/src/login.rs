@@ -1,7 +1,11 @@
-use crate::api::{URL_CC_LIST_JOINED, URL_CC_RESOURCE_DOWNLOAD, URL_CC_RESOURCE_LIST, URL_CC_RESOURCE_RECORDS, URL_CC_RESOURCE_VIEWER, URL_LOGIN};
+use crate::api::{
+    URL_CC_LIST_JOINED, URL_CC_RESOURCE_DOWNLOAD, URL_CC_RESOURCE_LIST, URL_CC_RESOURCE_RECORDS,
+    URL_CC_RESOURCE_VIEWER, URL_LOGIN,
+};
+use futures::future::join_all;
 use reqwest::{
-    header::{HeaderMap, HeaderValue},
     Client,
+    header::{HeaderMap, HeaderValue},
 };
 use serde::{Deserialize, Serialize};
 use std::{
@@ -10,7 +14,6 @@ use std::{
     path::{Path, PathBuf},
     sync::Arc,
 };
-use futures::future::join_all;
 use tauri::{AppHandle, Manager};
 use tokio::sync::Semaphore;
 
@@ -34,14 +37,8 @@ pub fn web_headers() -> HeaderMap {
         "Referer",
         HeaderValue::from_static("https://www.mosoteach.cn/"),
     );
-    headers.insert(
-        "x-client-app-id",
-        HeaderValue::from_static("MTWEB"),
-    );
-    headers.insert(
-        "x-client-version",
-        HeaderValue::from_static("6.0.0"),
-    );
+    headers.insert("x-client-app-id", HeaderValue::from_static("MTWEB"));
+    headers.insert("x-client-version", HeaderValue::from_static("6.0.0"));
     headers.insert(
         "x-security-type",
         HeaderValue::from_static("SECURITY_TYPE_TOKEN"),
@@ -243,8 +240,14 @@ pub struct SessionUser {
 
 impl From<&User> for SessionUser {
     fn from(user: &User) -> Self {
-        let school_name = user.bind_school.as_ref().and_then(|s| s.school_name.clone());
-        let department_name = user.bind_school.as_ref().and_then(|s| s.department_name.clone());
+        let school_name = user
+            .bind_school
+            .as_ref()
+            .and_then(|s| s.school_name.clone());
+        let department_name = user
+            .bind_school
+            .as_ref()
+            .and_then(|s| s.department_name.clone());
         Self {
             user_id: user.user_id.clone(),
             full_name: user.full_name.clone(),
@@ -329,7 +332,11 @@ impl MosoteachClient {
         }
     }
 
-    pub async fn login(&mut self, username: &str, ciphertext: &str) -> Result<(User, String), String> {
+    pub async fn login(
+        &mut self,
+        username: &str,
+        ciphertext: &str,
+    ) -> Result<(User, String), String> {
         let timestamp = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()
@@ -352,14 +359,17 @@ impl MosoteachClient {
             .await
             .map_err(|error| format!("网络请求失败: {}", error))?;
 
-        let body_text = response.text().await.map_err(|e| format!("读取响应失败: {}", e))?;
+        let body_text = response
+            .text()
+            .await
+            .map_err(|e| format!("读取响应失败: {}", e))?;
 
         if !body_text.starts_with('{') {
             return Err(format!("服务器返回非JSON响应: {}", body_text));
         }
 
-        let login_response: LoginApiResponse = serde_json::from_str(&body_text)
-            .map_err(|e| format!("JSON解析失败: {}", e))?;
+        let login_response: LoginApiResponse =
+            serde_json::from_str(&body_text).map_err(|e| format!("JSON解析失败: {}", e))?;
 
         if !login_response.status {
             return Err(format!("登录失败"));
@@ -394,7 +404,10 @@ impl MosoteachClient {
             .await
             .map_err(|error| format!("获取课程列表失败: {}", error))?;
 
-        let body_text = response.text().await.map_err(|e| format!("读取课程响应失败: {}", e))?;
+        let body_text = response
+            .text()
+            .await
+            .map_err(|e| format!("读取课程响应失败: {}", e))?;
 
         let course_response: CourseListApiResponse = serde_json::from_str(&body_text)
             .map_err(|error| format!("课程JSON解析失败: {}", error))?;
@@ -430,7 +443,10 @@ impl MosoteachClient {
             .await
             .map_err(|e| format!("获取资源列表失败: {}", e))?;
 
-        let body_text = response.text().await.map_err(|e| format!("读取资源响应失败: {}", e))?;
+        let body_text = response
+            .text()
+            .await
+            .map_err(|e| format!("读取资源响应失败: {}", e))?;
 
         let result: ResourceListResponse =
             serde_json::from_str(&body_text).map_err(|e| format!("资源JSON解析失败: {}", e))?;
@@ -470,7 +486,11 @@ impl MosoteachClient {
         Ok(())
     }
 
-    pub async fn get_viewer_url(&self, ccid: &str, resource_id: &str) -> Result<ViewerResponse, String> {
+    pub async fn get_viewer_url(
+        &self,
+        ccid: &str,
+        resource_id: &str,
+    ) -> Result<ViewerResponse, String> {
         let token = self
             .token
             .as_deref()
@@ -503,11 +523,14 @@ impl MosoteachClient {
             return Err(format!("访问资源失败:状态码{}", response.status()));
         }
 
-        let body_text = response.text().await.map_err(|e| format!("读取响应失败: {}", e))?;
+        let body_text = response
+            .text()
+            .await
+            .map_err(|e| format!("读取响应失败: {}", e))?;
         println!("[Complete] viewer API响应: {}", body_text);
 
-        let viewer_resp: ViewerResponse = serde_json::from_str(&body_text)
-            .map_err(|e| format!("解析viewer响应失败: {}", e))?;
+        let viewer_resp: ViewerResponse =
+            serde_json::from_str(&body_text).map_err(|e| format!("解析viewer响应失败: {}", e))?;
 
         println!("[Complete] viewer url字段: {:?}", viewer_resp.url);
 
@@ -527,7 +550,10 @@ impl MosoteachClient {
             return Err(format!("获取m3u8失败:状态码{}", response.status()));
         }
 
-        response.text().await.map_err(|e| format!("读取m3u8内容失败: {}", e))
+        response
+            .text()
+            .await
+            .map_err(|e| format!("读取m3u8内容失败: {}", e))
     }
 
     pub async fn fetch_ts_segments(&self, base_url: &str, count: usize) -> Result<(), String> {
@@ -541,7 +567,12 @@ impl MosoteachClient {
 
             handles.push(async move {
                 let _permit = sem.acquire().await.unwrap();
-                match http.get(&url).timeout(std::time::Duration::from_secs(15)).send().await {
+                match http
+                    .get(&url)
+                    .timeout(std::time::Duration::from_secs(15))
+                    .send()
+                    .await
+                {
                     Ok(resp) => {
                         if resp.status().is_success() {
                             println!("[Complete] 分片请求成功: segment={}", i);
@@ -590,7 +621,11 @@ impl MosoteachClient {
         Ok(())
     }
 
-    pub async fn get_resource_records(&self, ccid: &str, resource_id: &str) -> Result<ResourceRecord, String> {
+    pub async fn get_resource_records(
+        &self,
+        ccid: &str,
+        resource_id: &str,
+    ) -> Result<ResourceRecord, String> {
         let token = self
             .token
             .as_deref()
@@ -615,15 +650,24 @@ impl MosoteachClient {
             .await
             .map_err(|e| format!("获取资源记录失败: {}", e))?;
 
-        let body_text = response.text().await.map_err(|e| format!("读取资源记录响应失败: {}", e))?;
+        let body_text = response
+            .text()
+            .await
+            .map_err(|e| format!("读取资源记录响应失败: {}", e))?;
 
-        let result: ResourceRecordResponse = serde_json::from_str(&body_text)
-            .map_err(|e| format!("资源记录JSON解析失败: {}", e))?;
+        let result: ResourceRecordResponse =
+            serde_json::from_str(&body_text).map_err(|e| format!("资源记录JSON解析失败: {}", e))?;
 
         Ok(result.record)
     }
 
-    pub async fn update_watch_progress(&self, ccid: &str, resource_id: &str, watch_to: i32, duration: f64) -> Result<(), String> {
+    pub async fn update_watch_progress(
+        &self,
+        ccid: &str,
+        resource_id: &str,
+        watch_to: i32,
+        duration: f64,
+    ) -> Result<(), String> {
         let token = self
             .token
             .as_deref()
@@ -648,7 +692,10 @@ impl MosoteachClient {
             "duration": duration
         });
 
-        println!("[Complete] 进度上报: watchTo={}, currentWatchTo={}, duration={}", watch_to, duration, duration);
+        println!(
+            "[Complete] 进度上报: watchTo={}, currentWatchTo={}, duration={}",
+            watch_to, duration, duration
+        );
 
         let response = self
             .http_client
@@ -668,11 +715,27 @@ impl MosoteachClient {
     }
 
     // 发送多次进度上报确保完成信号被可靠送达
-    pub async fn report_progress_multiple(&self, ccid: &str, resource_id: &str, watch_to: i32, duration: f64, times: usize) -> Result<(), String> {
+    pub async fn report_progress_multiple(
+        &self,
+        ccid: &str,
+        resource_id: &str,
+        watch_to: i32,
+        duration: f64,
+        times: usize,
+    ) -> Result<(), String> {
         for i in 0..times {
-            println!("[Complete] 进度上报 {}/{}: watchTo={}, currentWatchTo={}", i+1, times, watch_to, duration);
-            if let Err(e) = self.update_watch_progress(ccid, resource_id, watch_to, duration).await {
-                println!("[Complete] 第{}次上报失败: {}", i+1, e);
+            println!(
+                "[Complete] 进度上报 {}/{}: watchTo={}, currentWatchTo={}",
+                i + 1,
+                times,
+                watch_to,
+                duration
+            );
+            if let Err(e) = self
+                .update_watch_progress(ccid, resource_id, watch_to, duration)
+                .await
+            {
+                println!("[Complete] 第{}次上报失败: {}", i + 1, e);
             }
             // 间隔一小段时间
             tokio::time::sleep(std::time::Duration::from_millis(500)).await;
@@ -702,14 +765,20 @@ impl MosoteachClient {
             return Err(format!("下载资源失败: 状态码{}", response.status()));
         }
 
-        let bytes = response.bytes().await.map_err(|e| format!("读取下载内容失败: {}", e))?;
+        let bytes = response
+            .bytes()
+            .await
+            .map_err(|e| format!("读取下载内容失败: {}", e))?;
 
         // 获取临时目录
         let temp_dir = std::env::temp_dir();
-        let file_name = format!("ybk_resource_{}.tmp", std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap()
-            .as_nanos());
+        let file_name = format!(
+            "ybk_resource_{}.tmp",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        );
         let file_path = temp_dir.join(file_name);
 
         std::fs::write(&file_path, &bytes).map_err(|e| format!("保存临时文件失败: {}", e))?;
@@ -740,7 +809,10 @@ pub async fn bootstrap_session(app: &AppHandle) -> Result<SessionState, String> 
             dashboard: Some(dashboard),
         }),
         Err(_) => {
-            save_stored_session(app, &StoredSession::username_only(remembered_username.clone()))?;
+            save_stored_session(
+                app,
+                &StoredSession::username_only(remembered_username.clone()),
+            )?;
             Ok(SessionState::unauthenticated(remembered_username))
         }
     }
@@ -779,8 +851,8 @@ pub async fn login_and_build_session(
 }
 
 pub async fn refresh_dashboard(app: &AppHandle) -> Result<DashboardState, String> {
-    let stored_session = load_stored_session(app)?
-        .ok_or_else(|| "未找到登录会话，请重新登录".to_string())?;
+    let stored_session =
+        load_stored_session(app)?.ok_or_else(|| "未找到登录会话，请重新登录".to_string())?;
 
     if !stored_session.has_token() {
         return Err("当前没有可用的登录令牌，请重新登录".to_string());
@@ -819,7 +891,8 @@ fn load_stored_session(app: &AppHandle) -> Result<Option<StoredSession>, String>
     }
 
     let content = fs::read_to_string(path).map_err(|error| error.to_string())?;
-    let session = serde_json::from_str::<StoredSession>(&content).map_err(|error| error.to_string())?;
+    let session =
+        serde_json::from_str::<StoredSession>(&content).map_err(|error| error.to_string())?;
     Ok(Some(session))
 }
 
@@ -878,16 +951,22 @@ async fn build_dashboard(client: &MosoteachClient) -> Result<DashboardState, Str
         async move {
             let _permit = sem.acquire().await.unwrap();
             let resources = client.list_resources(&ccid).await.unwrap_or_default();
-            let completed = resources.iter().filter(|r| is_resource_completed(r)).count();
+            let completed = resources
+                .iter()
+                .filter(|r| is_resource_completed(r))
+                .count();
             let incomplete = resources.len() - completed;
-            (course.id.clone(), ResourceState { completed, incomplete })
+            (
+                course.id.clone(),
+                ResourceState {
+                    completed,
+                    incomplete,
+                },
+            )
         }
     });
 
-    let results: HashMap<String, ResourceState> = join_all(futures)
-        .await
-        .into_iter()
-        .collect();
+    let results: HashMap<String, ResourceState> = join_all(futures).await.into_iter().collect();
 
     let course_summaries = courses
         .into_iter()
@@ -895,7 +974,11 @@ async fn build_dashboard(client: &MosoteachClient) -> Result<DashboardState, Str
             clazzCourseId: c.id.clone(),
             courseName: c.course.name.clone(),
             className: Some(c.clazz.name.clone()),
-            teacherName: c.creater.as_ref().map(|cr| cr.full_name.clone()).unwrap_or_default(),
+            teacherName: c
+                .creater
+                .as_ref()
+                .map(|cr| cr.full_name.clone())
+                .unwrap_or_default(),
             courseStatus: c.status.clone().unwrap_or_default(),
             createTime: c.create_time.clone(),
             resourceState: results.get(&c.id).cloned().unwrap_or_default(),
@@ -911,8 +994,8 @@ pub async fn complete_course_resources(
     app: &AppHandle,
     ccid: &str,
 ) -> Result<CompletionResult, String> {
-    let stored = load_stored_session(app)?
-        .ok_or_else(|| "未找到登录会话，请重新登录".to_string())?;
+    let stored =
+        load_stored_session(app)?.ok_or_else(|| "未找到登录会话，请重新登录".to_string())?;
 
     if !stored.has_token() {
         return Err("当前没有可用的登录令牌，请重新登录".to_string());
@@ -932,16 +1015,39 @@ pub async fn complete_course_resources(
     println!("\n[Complete] 资源列表详细结构:");
     for (i, r) in resources.iter().enumerate() {
         println!("  资源[{}]: id={}", i, r._id);
-        println!("    - score: {:?}, obtain_score: {:?}", r.score, r.obtain_score);
-        println!("    - mime_type: {:?}, meta_duration: {:?}", r.mime_type, r.meta_duration);
-        println!("    - full_cover_url: {:?}", r.full_cover_url.as_ref().map(|u| if u.len() > 80 { format!("{}...({} chars)", &u[..80], u.len()) } else { u.clone() }));
+        println!(
+            "    - score: {:?}, obtain_score: {:?}",
+            r.score, r.obtain_score
+        );
+        println!(
+            "    - mime_type: {:?}, meta_duration: {:?}",
+            r.mime_type, r.meta_duration
+        );
+        println!(
+            "    - full_cover_url: {:?}",
+            r.full_cover_url.as_ref().map(|u| if u.len() > 80 {
+                format!("{}...({} chars)", &u[..80], u.len())
+            } else {
+                u.clone()
+            })
+        );
     }
 
     // 检查 full_cover_url 是否存在
-    let resources_with_url: Vec<_> = resources.iter().filter(|r| r.full_cover_url.is_some()).collect();
-    let resources_without_url: Vec<_> = resources.iter().filter(|r| r.full_cover_url.is_none()).collect();
+    let resources_with_url: Vec<_> = resources
+        .iter()
+        .filter(|r| r.full_cover_url.is_some())
+        .collect();
+    let resources_without_url: Vec<_> = resources
+        .iter()
+        .filter(|r| r.full_cover_url.is_none())
+        .collect();
 
-    println!("\n[Complete] URL 统计: 有URL的={}, 无URL的={}", resources_with_url.len(), resources_without_url.len());
+    println!(
+        "\n[Complete] URL 统计: 有URL的={}, 无URL的={}",
+        resources_with_url.len(),
+        resources_without_url.len()
+    );
 
     if !resources_without_url.is_empty() {
         println!("[Complete] 无URL的资源ID列表:");
@@ -1008,11 +1114,14 @@ pub async fn complete_course_resources(
                                     // 简单解析: 查找所有 .ts 分片
                                     let ts_count = m3u8_content.matches(".ts").count();
                                     if ts_count > 0 {
-                                        println!("[Complete] 发现 {} 个视频分片，请求中...", ts_count);
+                                        println!(
+                                            "[Complete] 发现 {} 个视频分片，请求中...",
+                                            ts_count
+                                        );
 
                                         // 获取 base URL (用于拼接分片地址)
                                         let base = if let Some(idx) = clean_url.rfind('/') {
-                                            format!("{}/", &clean_url[..idx+1])
+                                            format!("{}/", &clean_url[..idx + 1])
                                         } else {
                                             clean_url.trim_end_matches(".m3u8").to_string()
                                         };
@@ -1036,8 +1145,14 @@ pub async fn complete_course_resources(
                 // 更新观看进度为视频长度，发送多次确保完成
                 let duration = meta_duration as f64;
                 let target_watch = meta_duration;
-                if let Err(e) = client.report_progress_multiple(&ccid, &resource_id, target_watch, duration, 3).await {
-                    println!("[Complete] 进度上报失败: resource_id={}, error={}", resource_id, e);
+                if let Err(e) = client
+                    .report_progress_multiple(&ccid, &resource_id, target_watch, duration, 3)
+                    .await
+                {
+                    println!(
+                        "[Complete] 进度上报失败: resource_id={}, error={}",
+                        resource_id, e
+                    );
                 }
             }
 
@@ -1045,12 +1160,21 @@ pub async fn complete_course_resources(
             if !mime_type.starts_with("video/") {
                 // 调用 download API 即可标记完成（无需实际下载）
                 match client.download_resource_api(&ccid, &resource_id).await {
-                    Ok(_) => println!("[Complete] 资源标记完成(download API): resource_id={}", resource_id),
+                    Ok(_) => println!(
+                        "[Complete] 资源标记完成(download API): resource_id={}",
+                        resource_id
+                    ),
                     Err(e) => {
-                        println!("[Complete] download API 失败，尝试 viewer: resource_id={}, error={}", resource_id, e);
+                        println!(
+                            "[Complete] download API 失败，尝试 viewer: resource_id={}, error={}",
+                            resource_id, e
+                        );
                         // download 失败则尝试 viewer
                         if let Err(e2) = client.view_resource(&ccid, &resource_id).await {
-                            println!("[Complete] viewer API 也失败: resource_id={}, error={}", resource_id, e2);
+                            println!(
+                                "[Complete] viewer API 也失败: resource_id={}, error={}",
+                                resource_id, e2
+                            );
                         }
                     }
                 }
@@ -1080,9 +1204,7 @@ pub async fn complete_course_resources(
     let mut failed = Vec::new();
 
     for before in &incomplete {
-        let after = resources_after
-            .iter()
-            .find(|r| r._id == before._id);
+        let after = resources_after.iter().find(|r| r._id == before._id);
 
         match after {
             Some(after) => {
@@ -1093,7 +1215,11 @@ pub async fn complete_course_resources(
                     before._id,
                     score,
                     obtain,
-                    if score > 0.0 && obtain >= score { "✓ 已完成" } else { "✗ 未完成" }
+                    if score > 0.0 && obtain >= score {
+                        "✓ 已完成"
+                    } else {
+                        "✗ 未完成"
+                    }
                 );
                 if score > 0.0 && obtain >= score {
                     completed += 1;

@@ -31,6 +31,7 @@ const RAW_RUNTIME_STATE =
           ["@tauri-apps/api", "npm:2.10.1"],\
           ["@tauri-apps/cli", "npm:2.10.1"],\
           ["@tauri-apps/plugin-opener", "npm:2.5.3"],\
+          ["@tauri-apps/plugin-updater", "npm:2.10.1"],\
           ["@vitejs/plugin-vue", "virtual:52553dcdea5a0d0f2bf318c568663691c3c7d38bc21bb7976da5d6c1db8cae59d56cf2633a7dffef1e485196f96d1b0509b60e31ce8e3ca37afcf5e6a79478ef#npm:5.2.4"],\
           ["pinia", "virtual:52553dcdea5a0d0f2bf318c568663691c3c7d38bc21bb7976da5d6c1db8cae59d56cf2633a7dffef1e485196f96d1b0509b60e31ce8e3ca37afcf5e6a79478ef#npm:3.0.4"],\
           ["typescript", "patch:typescript@npm%3A5.6.3#optional!builtin<compat/typescript>::version=5.6.3&hash=8c6c40"],\
@@ -665,6 +666,13 @@ const RAW_RUNTIME_STATE =
           ["@tauri-apps/api", "npm:2.10.1"]\
         ],\
         "linkType": "HARD"\
+      }],\
+      ["npm:2.11.0", {\
+        "packageLocation": "../../../AppData/Local/Yarn/Berry/cache/@tauri-apps-api-npm-2.11.0-8bd5bbedef-10c0.zip/node_modules/@tauri-apps/api/",\
+        "packageDependencies": [\
+          ["@tauri-apps/api", "npm:2.11.0"]\
+        ],\
+        "linkType": "HARD"\
       }]\
     ]],\
     ["@tauri-apps/cli", [\
@@ -792,6 +800,16 @@ const RAW_RUNTIME_STATE =
         "packageDependencies": [\
           ["@tauri-apps/api", "npm:2.10.1"],\
           ["@tauri-apps/plugin-opener", "npm:2.5.3"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["@tauri-apps/plugin-updater", [\
+      ["npm:2.10.1", {\
+        "packageLocation": "../../../AppData/Local/Yarn/Berry/cache/@tauri-apps-plugin-updater-npm-2.10.1-710036ff4e-10c0.zip/node_modules/@tauri-apps/plugin-updater/",\
+        "packageDependencies": [\
+          ["@tauri-apps/api", "npm:2.11.0"],\
+          ["@tauri-apps/plugin-updater", "npm:2.10.1"]\
         ],\
         "linkType": "HARD"\
       }]\
@@ -2482,6 +2500,7 @@ const RAW_RUNTIME_STATE =
           ["@tauri-apps/api", "npm:2.10.1"],\
           ["@tauri-apps/cli", "npm:2.10.1"],\
           ["@tauri-apps/plugin-opener", "npm:2.5.3"],\
+          ["@tauri-apps/plugin-updater", "npm:2.10.1"],\
           ["@vitejs/plugin-vue", "virtual:52553dcdea5a0d0f2bf318c568663691c3c7d38bc21bb7976da5d6c1db8cae59d56cf2633a7dffef1e485196f96d1b0509b60e31ce8e3ca37afcf5e6a79478ef#npm:5.2.4"],\
           ["pinia", "virtual:52553dcdea5a0d0f2bf318c568663691c3c7d38bc21bb7976da5d6c1db8cae59d56cf2633a7dffef1e485196f96d1b0509b60e31ce8e3ca37afcf5e6a79478ef#npm:3.0.4"],\
           ["typescript", "patch:typescript@npm%3A5.6.3#optional!builtin<compat/typescript>::version=5.6.3&hash=8c6c40"],\
