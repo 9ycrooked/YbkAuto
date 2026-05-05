@@ -4,9 +4,6 @@ displayName: 自动构建Tauri应用
 triggers:
   trigger: auto
   push:
-    branches:
-      precise:
-        - main
     tags:
       prefix:
         - v
