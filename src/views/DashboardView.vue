@@ -261,7 +261,7 @@ const onRefresh = () => {
   display: block;
 }
 
-.refresh-icon.spinning {
+.refresh-icon {
   animation: spin 0.8s linear infinite;
 }
 
@@ -321,7 +321,7 @@ const onRefresh = () => {
   z-index: 1;
 }
 
-.course-card.in-view {
+.course-card {
   opacity: 1;
   transform: translateY(0);
 }
@@ -398,45 +398,6 @@ const onRefresh = () => {
   font-weight: 500;
   color: var(--text-2);
   flex-shrink: 0;
-}
-
-.checkin-note {
-  font-size: 0.8125rem;
-  color: var(--text-2);
-  line-height: 1.5;
-}
-
-.muted {
-  color: var(--text-3) !important;
-}
-
-.status-chip {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 24px;
-  padding: 0 10px;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  line-height: 1;
-  letter-spacing: 0.01em;
-  flex-shrink: 0;
-}
-
-.status-chip--success {
-  background: rgba(var(--success-rgb), 0.12);
-  color: var(--success);
-}
-
-.status-chip--warning {
-  background: var(--accent-soft);
-  color: var(--accent);
-}
-
-.status-chip--muted {
-  background: rgba(var(--text-rgb), 0.07);
-  color: var(--text-2);
 }
 
 .resource-pill {
