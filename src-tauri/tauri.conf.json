@@ -26,7 +26,7 @@
   },
   "bundle": {
     "active": true,
-    "targets": "all",
+    "targets": ["nsis","msi"],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -34,11 +34,30 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
+    "publisher": "芊芒",
+    "shortDescription": "具有资源看板和完成资源功能",
+    "longDescription": "YbkAuto是一款基于Vue3+Ts+Tauri+Rust开发的一款小工具",
+    "copyright": "Copyright © 2025",
+    "category": "Utility",
+    "createUpdaterArtifacts": true,
+
     "windows": {
       "webviewInstallMode": {
         "type": "downloadBootstrapper"
+      },
+      "certificateThumbprint": null,
+      "timestampUrl": null,
+      "digestAlgorithm": "sha256",
+      "nsis": {
+        "installerIcon": "icons/icon.ico",
+        "installMode": "both",
+        "languages": ["SimpChinese", "English"],
+        "displayLanguageSelector": false,
+        "startMenuFolder": "YbkAuto"
       }
     }
+
+
   },
   "plugins": {
     "updater": {

@@ -141,7 +141,7 @@ struct ResourceListResponse {
 }
 
 #[derive(Debug, Deserialize)]
-struct ResourceItem {
+pub(crate) struct ResourceItem {
     #[serde(alias = "id")]
     _id: String,
     #[serde(alias = "score")]
@@ -151,9 +151,9 @@ struct ResourceItem {
     #[serde(alias = "fullCoverUrl", default)]
     full_cover_url: Option<String>,
     #[serde(alias = "viewFlag", default)]
-    view_flag: Option<String>,
+    _view_flag: Option<String>,
     #[serde(alias = "viewCount", default)]
-    view_count: Option<i32>,
+    _view_count: Option<i32>,
     #[serde(alias = "mimeType", default)]
     mime_type: Option<String>,
     #[serde(alias = "metaDuration", default)]
@@ -161,24 +161,25 @@ struct ResourceItem {
 }
 
 #[derive(Debug, Deserialize)]
-struct ResourceRecordResponse {
+#[allow(dead_code)]
+pub(crate) struct ResourceRecordResponse {
     record: ResourceRecord,
 }
 
 #[derive(Debug, Deserialize)]
-struct ResourceRecord {
+pub(crate) struct ResourceRecord {
     #[serde(alias = "watchTo", default)]
-    watch_to: i32,
+    _watch_to: i32,
     #[serde(alias = "lastWatchTo", default)]
-    last_watch_to: i32,
+    _last_watch_to: i32,
 }
 
 #[derive(Debug, Deserialize)]
-struct ViewerResponse {
+pub(crate) struct ViewerResponse {
     #[serde(alias = "url", default)]
     url: Option<String>,
     #[serde(alias = "cover", default)]
-    cover: Option<String>,
+    _cover: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -208,18 +209,18 @@ impl Default for ResourceState {
 #[serde(rename_all = "camelCase")]
 pub struct CourseSummary {
     #[serde(alias = "clazzCourseId", alias = "clazz_course_id")]
-    pub clazzCourseId: String,
+    pub clazz_course_id: String,
     #[serde(alias = "courseName", alias = "course_name")]
-    pub courseName: String,
+    pub course_name: String,
     #[serde(alias = "className", alias = "class_name")]
-    pub className: Option<String>,
+    pub class_name: Option<String>,
     #[serde(alias = "teacherName", alias = "teacher_name")]
-    pub teacherName: String,
+    pub teacher_name: String,
     #[serde(alias = "courseStatus", alias = "course_status")]
-    pub courseStatus: String,
+    pub course_status: String,
     #[serde(alias = "createTime", alias = "create_time")]
-    pub createTime: Option<String>,
-    pub resourceState: ResourceState,
+    pub create_time: Option<String>,
+    pub resource_state: ResourceState,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
@@ -621,6 +622,7 @@ impl MosoteachClient {
         Ok(())
     }
 
+    #[allow(dead_code)]
     pub async fn get_resource_records(
         &self,
         ccid: &str,
@@ -743,6 +745,7 @@ impl MosoteachClient {
         Ok(())
     }
 
+    #[allow(dead_code)]
     pub async fn download_resource(&self, url: &str) -> Result<Option<String>, String> {
         let token = self
             .token
@@ -971,17 +974,17 @@ async fn build_dashboard(client: &MosoteachClient) -> Result<DashboardState, Str
     let course_summaries = courses
         .into_iter()
         .map(|c| CourseSummary {
-            clazzCourseId: c.id.clone(),
-            courseName: c.course.name.clone(),
-            className: Some(c.clazz.name.clone()),
-            teacherName: c
+            clazz_course_id: c.id.clone(),
+            course_name: c.course.name.clone(),
+            class_name: Some(c.clazz.name.clone()),
+            teacher_name: c
                 .creater
                 .as_ref()
                 .map(|cr| cr.full_name.clone())
                 .unwrap_or_default(),
-            courseStatus: c.status.clone().unwrap_or_default(),
-            createTime: c.create_time.clone(),
-            resourceState: results.get(&c.id).cloned().unwrap_or_default(),
+            course_status: c.status.clone().unwrap_or_default(),
+            create_time: c.create_time.clone(),
+            resource_state: results.get(&c.id).cloned().unwrap_or_default(),
         })
         .collect();
 
@@ -1091,7 +1094,7 @@ pub async fn complete_course_resources(
         let resource_id = resource._id.clone();
         let mime_type = resource.mime_type.clone().unwrap_or_default();
         let meta_duration = resource.meta_duration.unwrap_or(0);
-        let full_cover_url = resource.full_cover_url.clone();
+        let _full_cover_url = resource.full_cover_url.clone();
         let client = client.clone();
         let sem = sem.clone();
 

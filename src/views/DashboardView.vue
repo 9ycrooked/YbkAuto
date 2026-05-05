@@ -102,25 +102,25 @@ const onRefresh = () => {
     <div v-if="courses.length" class="course-grid">
       <article
         v-for="(course, index) in courses"
-        :key="course.clazzCourseId"
+        :key="course.clazz_course_id"
         :class="['course-card', 'spotlight-card', { 'in-view': cardsRevealed }]"
         :style="{ transitionDelay: cardsRevealed ? `${Math.min(index * 0.06, 0.42)}s` : '0s' }"
         @mousemove="handleSpotlightMove"
       >
         <div class="course-card__top">
           <div>
-            <p class="course-class">{{ course.className ?? "" }}</p>
-            <h2>{{ course.courseName }}</h2>
-            <p class="course-teacher">{{ course.teacherName }}</p>
+            <p class="course-class">{{ course.class_name ?? "" }}</p>
+            <h2>{{ course.course_name }}</h2>
+            <p class="course-teacher">{{ course.teacher_name }}</p>
           </div>
-          <span class="course-state">{{ course.courseStatus }}</span>
+          <span class="course-state">{{ course.course_status }}</span>
         </div>
         <div class="course-card__body">
           <div class="info-row">
             <span class="info-label">资源状态</span>
             <span class="resource-pill"
-              >已完成 {{ course.resourceState.completed }} /
-              未完成 {{ course.resourceState.incomplete }}</span>
+              >已完成 {{ course.resource_state.completed }} /
+              未完成 {{ course.resource_state.incomplete }}</span>
           </div>
         </div>
       </article>

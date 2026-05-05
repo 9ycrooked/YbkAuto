@@ -21,15 +21,15 @@ export const useSessionStore = defineStore("session", () => {
   const courses = computed(() => session.value.dashboard?.courses ?? []);
   const sortedCourses = computed(() =>
     [...courses.value].sort((a, b) => {
-      if (!a.createTime || !b.createTime) return 0;
-      return b.createTime.localeCompare(a.createTime);
+      if (!a.create_time || !b.create_time) return 0;
+      return b.create_time.localeCompare(a.create_time);
     }),
   );
   const totalCompletedResources = computed(() =>
-    courses.value.reduce((count, course) => count + course.resourceState.completed, 0),
+    courses.value.reduce((count, course) => count + course.resource_state.completed, 0),
   );
   const totalIncompleteResources = computed(() =>
-    courses.value.reduce((count, course) => count + course.resourceState.incomplete, 0),
+    courses.value.reduce((count, course) => count + course.resource_state.incomplete, 0),
   );
   const userInitials = computed(() => {
     const name = session.value.user?.fullName ?? "";
