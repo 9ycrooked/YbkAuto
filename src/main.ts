@@ -12,7 +12,6 @@ app.use(router);
 
 app.mount("#app");
 
-// Bootstrap session after mount to ensure store is ready
 import { useSessionStore } from "./stores/session";
 const sessionStore = useSessionStore();
 void sessionStore.bootstrapSession();

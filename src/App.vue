@@ -105,7 +105,8 @@ watch(
 
 .dashboard-layout {
   width: min(1100px, 100%);
-  margin: 0 auto;
+  height: calc(100vh - 64px);
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   gap: 20px;

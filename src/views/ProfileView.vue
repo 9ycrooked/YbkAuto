@@ -2,14 +2,25 @@
 import { ref } from "vue";
 import { useSessionStore } from "../stores/session";
 import { useRouter } from "vue-router";
+import { checkUpdate } from "../utils/update";
 
 const sessionStore = useSessionStore();
 const router = useRouter();
 const selectedSetting = ref<string>("about");
+const isCheckingUpdate = ref(false);
 
 const handleLogout = async () => {
   await sessionStore.logout();
   router.push("/login");
+};
+
+const handleCheckUpdate = async () => {
+  isCheckingUpdate.value = true;
+  try {
+    await checkUpdate();
+  } finally {
+    isCheckingUpdate.value = false;
+  }
 };
 </script>
 
@@ -121,6 +132,37 @@ const handleLogout = async () => {
             </div>
           </div>
           <p class="about-tech">技术栈: Tauri v2 · Vue 3 · TypeScript · Rust</p>
+
+          <div class="update-section">
+            <button
+              class="update-btn"
+              :disabled="isCheckingUpdate"
+              @click="handleCheckUpdate"
+            >
+              <svg
+                :class="['update-icon', { spinning: isCheckingUpdate }]"
+                width="16"
+                height="16"
+                viewBox="0 0 16 16"
+                fill="none"
+              >
+                <path
+                  d="M13.5 8a5.5 5.5 0 01-10.4 2.5M2.5 8a5.5 5.5 0 0110.4-2.5"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                />
+                <path
+                  d="M13.5 2.5v3h-3M2.5 13.5v-3h3"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              {{ isCheckingUpdate ? '检查中...' : '检查更新' }}
+            </button>
+          </div>
 
           <div class="contact-card">
             <div class="contact-icon-wrapper">
@@ -401,6 +443,12 @@ const handleLogout = async () => {
   margin-bottom: 24px;
 }
 
+.update-section {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 24px;
+}
+
 .contact-card {
   display: flex;
   align-items: flex-start;
@@ -491,6 +539,48 @@ const handleLogout = async () => {
   font-size: 0.875rem;
   color: var(--text);
   font-weight: 500;
+}
+
+.update-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 20px;
+  border: none;
+  border-radius: 9999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s var(--ease);
+}
+
+.update-btn:hover:not(:disabled) {
+  background: var(--accent-dim);
+  color: #ffffff;
+}
+
+.update-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.update-icon {
+  flex-shrink: 0;
+}
+
+.update-icon.spinning {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @media (max-width: 900px) {

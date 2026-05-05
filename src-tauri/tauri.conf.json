@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "ybkauto",
+  "productName": "YbkAuto",
   "version": "0.1.0",
   "identifier": "com.y.ybkauto",
   "build": {
@@ -14,9 +14,9 @@
       {
         "title": "YbkAuto",
         "width": 915,
-        "height": 600,
+        "height": 630,
         "minWidth": 915,
-        "minHeight": 600,
+        "minHeight": 630,
         "center": true
       }
     ],
@@ -37,6 +37,9 @@
     "windows": {
       "webviewInstallMode": {
         "type": "downloadBootstrapper"
+      },
+      "wix": {
+        "language": ["zh-CN"]
       }
     }
   },

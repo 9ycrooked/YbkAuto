@@ -30,7 +30,9 @@ const RAW_RUNTIME_STATE =
         "packageDependencies": [\
           ["@tauri-apps/api", "npm:2.10.1"],\
           ["@tauri-apps/cli", "npm:2.10.1"],\
+          ["@tauri-apps/plugin-dialog", "npm:2.7.1"],\
           ["@tauri-apps/plugin-opener", "npm:2.5.3"],\
+          ["@tauri-apps/plugin-process", "npm:2.3.1"],\
           ["@tauri-apps/plugin-updater", "npm:2.10.1"],\
           ["@vitejs/plugin-vue", "virtual:52553dcdea5a0d0f2bf318c568663691c3c7d38bc21bb7976da5d6c1db8cae59d56cf2633a7dffef1e485196f96d1b0509b60e31ce8e3ca37afcf5e6a79478ef#npm:5.2.4"],\
           ["pinia", "virtual:52553dcdea5a0d0f2bf318c568663691c3c7d38bc21bb7976da5d6c1db8cae59d56cf2633a7dffef1e485196f96d1b0509b60e31ce8e3ca37afcf5e6a79478ef#npm:3.0.4"],\
@@ -794,12 +796,32 @@ const RAW_RUNTIME_STATE =
         "linkType": "HARD"\
       }]\
     ]],\
+    ["@tauri-apps/plugin-dialog", [\
+      ["npm:2.7.1", {\
+        "packageLocation": "../../../AppData/Local/Yarn/Berry/cache/@tauri-apps-plugin-dialog-npm-2.7.1-d17f94abe8-10c0.zip/node_modules/@tauri-apps/plugin-dialog/",\
+        "packageDependencies": [\
+          ["@tauri-apps/api", "npm:2.11.0"],\
+          ["@tauri-apps/plugin-dialog", "npm:2.7.1"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
     ["@tauri-apps/plugin-opener", [\
       ["npm:2.5.3", {\
         "packageLocation": "../../../AppData/Local/Yarn/Berry/cache/@tauri-apps-plugin-opener-npm-2.5.3-e4b267445e-10c0.zip/node_modules/@tauri-apps/plugin-opener/",\
         "packageDependencies": [\
           ["@tauri-apps/api", "npm:2.10.1"],\
           ["@tauri-apps/plugin-opener", "npm:2.5.3"]\
+        ],\
+        "linkType": "HARD"\
+      }]\
+    ]],\
+    ["@tauri-apps/plugin-process", [\
+      ["npm:2.3.1", {\
+        "packageLocation": "../../../AppData/Local/Yarn/Berry/cache/@tauri-apps-plugin-process-npm-2.3.1-9a71931c0f-10c0.zip/node_modules/@tauri-apps/plugin-process/",\
+        "packageDependencies": [\
+          ["@tauri-apps/api", "npm:2.10.1"],\
+          ["@tauri-apps/plugin-process", "npm:2.3.1"]\
         ],\
         "linkType": "HARD"\
       }]\
@@ -2499,7 +2521,9 @@ const RAW_RUNTIME_STATE =
         "packageDependencies": [\
           ["@tauri-apps/api", "npm:2.10.1"],\
           ["@tauri-apps/cli", "npm:2.10.1"],\
+          ["@tauri-apps/plugin-dialog", "npm:2.7.1"],\
           ["@tauri-apps/plugin-opener", "npm:2.5.3"],\
+          ["@tauri-apps/plugin-process", "npm:2.3.1"],\
           ["@tauri-apps/plugin-updater", "npm:2.10.1"],\
           ["@vitejs/plugin-vue", "virtual:52553dcdea5a0d0f2bf318c568663691c3c7d38bc21bb7976da5d6c1db8cae59d56cf2633a7dffef1e485196f96d1b0509b60e31ce8e3ca37afcf5e6a79478ef#npm:5.2.4"],\
           ["pinia", "virtual:52553dcdea5a0d0f2bf318c568663691c3c7d38bc21bb7976da5d6c1db8cae59d56cf2633a7dffef1e485196f96d1b0509b60e31ce8e3ca37afcf5e6a79478ef#npm:3.0.4"],\

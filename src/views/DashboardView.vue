@@ -99,38 +99,40 @@ const onRefresh = () => {
       </div>
     </div>
 
-    <div v-if="courses.length" class="course-grid">
-      <article
-        v-for="(course, index) in courses"
-        :key="course.clazzCourseId"
-        :class="['course-card', 'spotlight-card', { 'in-view': cardsRevealed }]"
-        :style="{ transitionDelay: cardsRevealed ? `${Math.min(index * 0.06, 0.42)}s` : '0s' }"
-        @mousemove="handleSpotlightMove"
-      >
-        <div class="course-card__top">
-          <div>
-            <p class="course-class">{{ course.className ?? "" }}</p>
-            <h2>{{ course.courseName }}</h2>
-            <p class="course-teacher">{{ course.teacherName }}</p>
+    <div class="course-scroll-area">
+      <div v-if="courses.length" class="course-grid">
+        <article
+          v-for="(course, index) in courses"
+          :key="course.clazzCourseId"
+          :class="['course-card', 'spotlight-card', { 'in-view': cardsRevealed }]"
+          :style="{ transitionDelay: cardsRevealed ? `${Math.min(index * 0.06, 0.42)}s` : '0s' }"
+          @mousemove="handleSpotlightMove"
+        >
+          <div class="course-card__top">
+            <div>
+              <p class="course-class">{{ course.className ?? "" }}</p>
+              <h2>{{ course.courseName }}</h2>
+              <p class="course-teacher">{{ course.teacherName }}</p>
+            </div>
+            <span class="course-state">{{ course.courseStatus }}</span>
           </div>
-          <span class="course-state">{{ course.courseStatus }}</span>
-        </div>
-        <div class="course-card__body">
-          <div class="info-row">
-            <span class="info-label">资源状态</span>
-            <span class="resource-pill"
-              >已完成 {{ course.resourceState.completed }} /
-              未完成 {{ course.resourceState.incomplete }}</span>
+          <div class="course-card__body">
+            <div class="info-row">
+              <span class="info-label">资源状态</span>
+              <span class="resource-pill"
+                >已完成 {{ course.resourceState.completed }} /
+                未完成 {{ course.resourceState.incomplete }}</span>
+            </div>
           </div>
-        </div>
-      </article>
+        </article>
+      </div>
+      <section v-else class="state-card state-card--compact">
+        <h2>还没有课程数据</h2>
+        <p class="state-copy">
+          当前账号没有返回课程列表，或者数据暂时还没同步出来。
+        </p>
+      </section>
     </div>
-    <section v-else class="state-card state-card--compact">
-      <h2>还没有课程数据</h2>
-      <p class="state-copy">
-        当前账号没有返回课程列表，或者数据暂时还没同步出来。
-      </p>
-    </section>
   </div>
 </template>
 
@@ -139,9 +141,11 @@ const onRefresh = () => {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  height: 100%;
 }
 
 .dashboard-header {
+  flex-shrink: 0;
   padding: 0;
 }
 
@@ -476,6 +480,17 @@ const onRefresh = () => {
 .state-copy {
   margin-top: 8px;
   color: var(--text-2);
+}
+
+.course-scroll-area {
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: none;
+  padding-bottom: 16px;
+}
+
+.course-scroll-area::-webkit-scrollbar {
+  display: none;
 }
 
 @media (max-width: 900px) {
