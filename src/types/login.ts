@@ -10,13 +10,13 @@ export type CompletionResult = {
 };
 
 export type CourseSummary = {
-  clazz_course_id: string;
-  course_name: string;
-  class_name: string | null;
-  teacher_name: string;
-  course_status: string;
-  create_time: string | null;
-  resource_state: ResourceState;
+  clazzCourseId: string;
+  courseName: string;
+  className: string | null;
+  teacherName: string;
+  courseStatus: string;
+  createTime: string | null;
+  resourceState: ResourceState;
 };
 
 export type DashboardState = {

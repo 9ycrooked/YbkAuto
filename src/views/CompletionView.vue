@@ -39,7 +39,7 @@ const toggleAllCourses = () => {
     completionCourseIds.value = new Set();
   } else {
     completionCourseIds.value = new Set(
-      sortedCourses.value.map((c: CourseSummary) => c.clazz_course_id),
+      sortedCourses.value.map((c: CourseSummary) => c.clazzCourseId),
     );
   }
 };
@@ -117,9 +117,9 @@ const handleComplete = async () => {
               v-if="sortedCourses.length"
               :items="
                 sortedCourses.map((c: CourseSummary) => ({
-                  id: c.clazz_course_id,
-                  label: c.course_name,
-                  subLabel: c.teacher_name,
+                  id: c.clazzCourseId,
+                  label: c.courseName,
+                  subLabel: c.teacherName,
                 }))
               "
               :selected-ids="completionCourseIds"
