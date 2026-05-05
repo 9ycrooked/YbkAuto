@@ -28,7 +28,7 @@ stages:
           ID: ybkauto
           hostID:
             - dac47c19-2f7d-436d-8f56-fbac09cb0306
-        scriptType: SH
+        scriptType: batch
         script:
           - yarn install
           - yarn tauri build
