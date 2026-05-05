@@ -40,6 +40,10 @@
       },
       "wix": {
         "language": ["zh-CN"]
+      },
+      "nsis": {
+        "languages": ["SimpChinese"],
+        "displayLanguageSelector": false
       }
     }
   },
