@@ -7,6 +7,7 @@
   --surface: #ffffff;
   --surface-rgb: 255, 255, 255;
   --surface-hover: #f0f0f4;
+  --surface-raised: #ffffff;
   --surface-2: #f8f8fc;
   --border: #e0dee8;
   --border-rgb: 224, 222, 232;
@@ -49,6 +50,7 @@
     --surface: #111217;
     --surface-rgb: 17, 18, 23;
     --surface-hover: #1a1c25;
+    --surface-raised: #1a1c25;
     --surface-2: #171921;
     --border: rgba(67, 70, 81, 0.5);
     --border-rgb: 67, 70, 81;
