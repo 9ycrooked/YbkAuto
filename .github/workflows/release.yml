@@ -20,7 +20,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: lts/*
-          cache: 'yarn'
+
+      - name: Setup Yarn 4
+        run: |
+          npm install -g yarn@4.14.1
+          yarn --version
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -31,7 +35,7 @@ jobs:
           workspaces: src-tauri
 
       - name: Install frontend dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install --immutable
 
       - name: Build and Release
         uses: tauri-apps/tauri-action@v1
