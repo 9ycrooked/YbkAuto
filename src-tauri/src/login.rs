@@ -1159,25 +1159,26 @@ pub async fn complete_course_resources(
                 }
             }
 
-            // 2. 非视频资源，调用 download API 标记完成
+            // 2. 非视频资源，优先使用 view_resource (预览 API)
             if !mime_type.starts_with("video/") {
-                // 调用 download API 即可标记完成（无需实际下载）
-                match client.download_resource_api(&ccid, &resource_id).await {
-                    Ok(_) => println!(
-                        "[Complete] 资源标记完成(download API): resource_id={}",
-                        resource_id
-                    ),
+                println!("[Complete] 开始处理非视频资源: resource_id={}, mime_type={}", resource_id, mime_type);
+
+                // 优先使用 view_resource (预览 API)
+                match client.view_resource(&ccid, &resource_id).await {
+                    Ok(_) => {
+                        println!("[Complete] ✓ 预览完成(view_resource): resource_id={}", resource_id);
+                    }
                     Err(e) => {
-                        println!(
-                            "[Complete] download API 失败，尝试 viewer: resource_id={}, error={}",
-                            resource_id, e
-                        );
-                        // download 失败则尝试 viewer
-                        if let Err(e2) = client.view_resource(&ccid, &resource_id).await {
-                            println!(
-                                "[Complete] viewer API 也失败: resource_id={}, error={}",
-                                resource_id, e2
-                            );
+                        println!("[Complete] ✗ view_resource 失败，准备尝试 download: resource_id={}, error={}", resource_id, e);
+
+                        // download API 作为备用
+                        match client.download_resource_api(&ccid, &resource_id).await {
+                            Ok(_) => {
+                                println!("[Complete] ✓ 下载完成(download API): resource_id={}", resource_id);
+                            }
+                            Err(e2) => {
+                                println!("[Complete] ✗ download API 也失败: resource_id={}, error={}", resource_id, e2);
+                            }
                         }
                     }
                 }
