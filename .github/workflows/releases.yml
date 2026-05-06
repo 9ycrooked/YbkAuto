@@ -1,0 +1,48 @@
+name: 'Release'
+
+on:
+  push:
+    tags:
+      - 'v*'  # 改为标签触发，而不是 release 分支
+
+# This workflow will trigger on each push to a tag to create or update a GitHub release, build your app, and upload the artifacts to the release.
+
+jobs:
+  publish-tauri:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: 'windows-latest'  # 只保留 Windows（你的项目是 Windows 应用）
+            args: ''
+
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+
+      - name: install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: install frontend dependencies
+        run: yarn install --immutable  # 使用 --immutable 保持 lockfile 一致
+
+      - name: Build and Release
+        uses: tauri-apps/tauri-action@v0.6.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: 'YbkAuto ${{ github.ref_name }}'
+          releaseBody: 'See the assets to download and install.'
+          releaseDraft: false
+          prerelease: false
+          args: ${{ matrix.args }}
