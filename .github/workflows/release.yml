@@ -1,44 +1,40 @@
-name: Release
+name: 'Release'
 
 on:
   push:
     tags:
-      - 'v*'
+      - 'v*'  # 改为标签触发，而不是 release 分支
 
-permissions:
-  contents: write
+# This workflow will trigger on each push to a tag to create or update a GitHub release, build your app, and upload the artifacts to the release.
 
 jobs:
-  release:
-    runs-on: windows-latest
+  publish-tauri:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: 'windows-latest'  # 只保留 Windows（你的项目是 Windows 应用）
+            args: ''
 
+    runs-on: ${{ matrix.platform }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: setup node
         uses: actions/setup-node@v4
         with:
           node-version: lts/*
 
-      - name: Setup Yarn 4
-        run: |
-          npm install -g yarn@4.14.1
-          yarn --version
-
-      - name: Setup Rust
+      - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Rust cache
-        uses: swatinem/rust-cache@v2
-        with:
-          workspaces: src-tauri
-
-      - name: Install frontend dependencies
-        run: yarn install --immutable
+      - name: install frontend dependencies
+        run: yarn install --immutable  # 使用 --immutable 保持 lockfile 一致
 
       - name: Build and Release
-        uses: tauri-apps/tauri-action@v1
+        uses: tauri-apps/tauri-action@v2  # 使用 v2 版本
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
@@ -47,5 +43,6 @@ jobs:
           tagName: ${{ github.ref_name }}
           releaseName: 'YbkAuto ${{ github.ref_name }}'
           releaseBody: 'See the assets to download and install.'
-          releaseDraft: false
+          releaseDraft: false  # 改为 false，直接发布
           prerelease: false
+          args: ${{ matrix.args }}
