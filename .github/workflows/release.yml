@@ -34,7 +34,7 @@ jobs:
         run: yarn install --immutable  # 使用 --immutable 保持 lockfile 一致
 
       - name: Build and Release
-        uses: tauri-apps/tauri-action@v1
+        uses: tauri-apps/tauri-action@v0.6.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
