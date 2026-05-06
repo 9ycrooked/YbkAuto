@@ -127,7 +127,7 @@ const handleCheckUpdate = async () => {
             <div class="about-logo">Y</div>
             <div class="about-info">
               <p class="about-name">YbkAuto</p>
-              <p class="about-version">版本 0.3.0</p>
+              <p class="about-version">版本 0.4.0</p>
               <p class="about-desc">云班课桌面助手 — 课程管理、资源追踪、资源完成</p>
             </div>
           </div>
