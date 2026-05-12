@@ -100,6 +100,25 @@ const handleCheckUpdate = async () => {
               /></svg>
             关于 YbkAuto
           </button>
+          <button
+            :class="['settings-item', { active: selectedSetting === 'donate' }]"
+            @click="selectedSetting = 'donate'"
+          >
+            <svg
+              class="settings-icon"
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              ><path
+                d="M8 2a2 2 0 00-.78.16l-2.9 1.45A2 2 0 003.3 5.27a2 2 0 00.64 2.14l.76.84a2 2 0 001.4.56h3.28a2 2 0 001.4-.56l.76-.84a2 2 0 00.64-2.14 2 2 0 00-1.02-1.66L8.78 2.16A2 2 0 008 2z"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              /></svg>
+            打赏作者
+          </button>
           <button class="settings-item settings-item--danger" @click="handleLogout">
             <svg
               class="settings-icon"
@@ -127,7 +146,7 @@ const handleCheckUpdate = async () => {
             <div class="about-logo">Y</div>
             <div class="about-info">
               <p class="about-name">YbkAuto</p>
-              <p class="about-version">版本 0.2.0</p>
+              <p class="about-version">版本 0.3.0</p>
               <p class="about-desc">云班课桌面助手 — 课程管理、资源追踪、资源完成</p>
             </div>
           </div>
@@ -176,6 +195,21 @@ const handleCheckUpdate = async () => {
               <p class="contact-desc">如有任何问题请向该邮箱反馈</p>
               <a :href="'mailto:qianmang1@gmail.com'" class="contact-email">qianmang1@gmail.com</a>
             </div>
+          </div>
+        </div>
+      </template>
+      <template v-else-if="selectedSetting === 'donate'">
+        <div class="settings-content">
+          <h3 class="settings-content-title">打赏作者</h3>
+          <div class="donate-card">
+
+            <p class="donate-hint">感谢您对 YbkAuto 的支持与鼓励</p>
+            <img
+              class="donate-qr"
+              src="/images/微信赞赏码.jpg"
+              alt="微信赞赏码"
+            />
+            <p class="donate-tip">扫描上方二维码打赏</p>
           </div>
         </div>
       </template>
@@ -507,6 +541,50 @@ const handleCheckUpdate = async () => {
 
 .contact-email:hover {
   opacity: 0.8;
+}
+
+.donate-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 24px;
+  border-radius: 14px;
+  background: rgba(var(--accent-rgb), 0.06);
+  border: 1px solid var(--border);
+}
+
+.donate-icon-wrapper {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.donate-hint {
+  font-size: 0.9375rem;
+  color: var(--text-2);
+  margin-bottom: 20px;
+  text-align: center;
+  line-height: 1.5;
+}
+
+.donate-qr {
+  width: 240px;
+  height: 240px;
+  border-radius: 12px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+}
+
+.donate-tip {
+  font-size: 0.8125rem;
+  color: var(--text-3);
+  margin-top: 16px;
 }
 
 .account-info-card {

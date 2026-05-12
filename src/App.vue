@@ -47,14 +47,14 @@ watch(
     </div>
     <section v-if="sessionStore.isBootstrapping" class="state-card">
       <p class="eyebrow brand-gradient">YbkAuto</p>
-      <h1>正在恢复登录状态</h1>
-      <p class="state-copy">稍等一下，我们在帮你检查本地会话。</p>
+      <h1>恢复登录状态</h1>
+      <p class="state-copy">请稍候，正在自动登录...</p>
     </section>
 
     <section v-else-if="sessionStore.isLoggingIn" class="state-card">
       <p class="eyebrow brand-gradient">YbkAuto</p>
       <h1>正在跳转...</h1>
-      <p class="state-copy">登录成功，正在前往课程概览</p>
+      <p class="state-copy">登录成功</p>
       <div class="loading-spinner"></div>
     </section>
 
