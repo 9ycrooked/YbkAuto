@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "YbkAuto",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "identifier": "com.y.ybkauto",
   "build": {
     "beforeDevCommand": "yarn dev",
@@ -53,7 +53,7 @@
       "windows": {
         "installMode": "passive"
       },
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDExQ0ZEMkU3RDdCRDVDOEYKUldTUFhMM1g1OUxQRVRCWnptMUl2Q2NERnhoalVpRmxyUU84NzhXUW5EME11d2xZeWxrY3Z3Zm8K",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDdFRTI0RjNEMDMzMzhEODgKUldTSWpUTURQVS9pZm1HUVlEWlh6dVlOcEtoZktSVWdOUDBDTGhrN3lzODBkN2RZU3h1c3QrVFoK",
       "endpoints": [
         "https://github.com/9ycrooked/YbkAuto/releases/latest/download/latest.json"
       ],
