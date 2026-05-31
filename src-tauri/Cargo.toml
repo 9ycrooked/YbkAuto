@@ -1,8 +1,8 @@
 [package]
 name = "ybkauto"
-version = "0.1.0"
-description = "A Tauri App"
-authors = ["you"]
+version = "0.3.1"
+description = "云班课桌面助手"
+authors = ["YbkAuto Contributors"]
 edition = "2024"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -29,4 +29,3 @@ tokio = { version = "1.50.0", features = ["full"] }
 futures = "0.3"
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-updater = "2"
-

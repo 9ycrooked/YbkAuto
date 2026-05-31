@@ -1,13 +1,16 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { useSessionStore } from "../stores/session";
 import { useRouter } from "vue-router";
-import { checkUpdate } from "../utils/update";
+import { useUpdater } from "../composables/useUpdater";
 
 const sessionStore = useSessionStore();
 const router = useRouter();
 const selectedSetting = ref<string>("about");
-const isCheckingUpdate = ref(false);
+const { updateChecking, updateMessage, checkForUpdatesManually } = useUpdater();
+const updateStatusType = computed(() =>
+  updateMessage.value.startsWith("更新检查失败") ? "error" : "info",
+);
 
 const handleLogout = async () => {
   await sessionStore.logout();
@@ -15,12 +18,7 @@ const handleLogout = async () => {
 };
 
 const handleCheckUpdate = async () => {
-  isCheckingUpdate.value = true;
-  try {
-    await checkUpdate();
-  } finally {
-    isCheckingUpdate.value = false;
-  }
+  await checkForUpdatesManually();
 };
 </script>
 
@@ -146,7 +144,7 @@ const handleCheckUpdate = async () => {
             <div class="about-logo">Y</div>
             <div class="about-info">
               <p class="about-name">YbkAuto</p>
-              <p class="about-version">版本 0.3.0</p>
+              <p class="about-version">版本 0.3.1</p>
               <p class="about-desc">云班课桌面助手 — 课程管理、资源追踪、资源完成</p>
             </div>
           </div>
@@ -155,11 +153,11 @@ const handleCheckUpdate = async () => {
           <div class="update-section">
             <button
               class="update-btn"
-              :disabled="isCheckingUpdate"
+              :disabled="updateChecking"
               @click="handleCheckUpdate"
             >
               <svg
-                :class="['update-icon', { spinning: isCheckingUpdate }]"
+                :class="['update-icon', { spinning: updateChecking }]"
                 width="16"
                 height="16"
                 viewBox="0 0 16 16"
@@ -179,9 +177,15 @@ const handleCheckUpdate = async () => {
                   stroke-linejoin="round"
                 />
               </svg>
-              {{ isCheckingUpdate ? '检查中...' : '检查更新' }}
+              {{ updateChecking ? '检查中...' : '检查更新' }}
             </button>
           </div>
+          <p
+            v-if="updateMessage"
+            :class="['update-status', `update-status--${updateStatusType}`]"
+          >
+            {{ updateMessage }}
+          </p>
 
           <div class="contact-card">
             <div class="contact-icon-wrapper">
@@ -480,7 +484,27 @@ const handleCheckUpdate = async () => {
 .update-section {
   display: flex;
   justify-content: flex-start;
+  margin-bottom: 12px;
+}
+
+.update-status {
+  display: inline-flex;
   margin-bottom: 24px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.update-status--info {
+  background: rgba(var(--text-rgb), 0.06);
+  color: var(--text-2);
+}
+
+.update-status--error {
+  background: rgba(var(--error-rgb), 0.08);
+  color: var(--error);
+  border: 1px solid rgba(var(--error-rgb), 0.22);
 }
 
 .contact-card {

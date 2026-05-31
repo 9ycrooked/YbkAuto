@@ -44,8 +44,8 @@ POST /passports/account-login?_ts={timestamp}
 **请求体 (JSON)**:
 ```json
 {
-  "account": "18839651086",
-  "ciphertext": "d0dQRFN4ZHBia09wR1UwZjg1YjE3MmQ2MjliMDQyYTM5NDZlNjRmYzhiNGQwNWZmvjHPkqKCmu7qLNWhbpuF8A=="
+  "account": "{phone_number}",
+  "ciphertext": "{encrypted_password}"
 }
 ```
 
@@ -56,21 +56,21 @@ POST /passports/account-login?_ts={timestamp}
 ```json
 {
   "user": {
-    "accessId": "_7s6K4_-..I-.8_E",
-    "accessSecret": "_~1a_6Pj7-.sD7Z3",
-    "fullName": "许鑫垚",
-    "userId": "89FBD88B-BC83-4310-A4EC-1837249C8C8F",
-    "nickName": "188****1086",
-    "phoneNumber": "18839651086",
+    "accessId": "{mobile_api_access_id}",
+    "accessSecret": "{mobile_api_access_secret}",
+    "fullName": "示例用户",
+    "userId": "{user_id}",
+    "nickName": "138****0000",
+    "phoneNumber": "{phone_number}",
     "bindSchool": {
-      "schoolId": "832BE449-8AE9-9DD0-D966-E5BF6884EAFA",
-      "schoolName": "河南理工大学",
-      "departmentId": "11E40935-F9AE-5D81-CADD-CFF5ECD00111",
-      "departmentName": "建筑与艺术设计学院"
+      "schoolId": "{school_id}",
+      "schoolName": "示例学校",
+      "departmentId": "{department_id}",
+      "departmentName": "示例院系"
     },
-    "studentNo": "312317020524"
+    "studentNo": "{student_no}"
   },
-  "token": "e705d0b3bd73444587f5f8e822ed254a",  // 网页版 API 认证 token
+  "token": "{web_api_token}",  // 网页版 API 认证 token
   "status": true
 }
 ```
@@ -119,12 +119,12 @@ GET /ccs/{ccid}?_ts={timestamp}
   "clazzCourse": {
     "id": "284A240E-BD1D-11F0-B5BC-9C63C078B890",
     "operater": {
-      "fullName": "许鑫垚",
+      "fullName": "示例用户",
       "roleId": 2
     },
     "school": {
-      "id": "832BE449-8AE9-9DD0-D966-E5BF6884EAFA",
-      "name": "河南理工大学"
+      "id": "{school_id}",
+      "name": "示例学校"
     },
     "joinAllowedFlag": "Y",
     "leaveAllowedFlag": "Y"
@@ -256,11 +256,11 @@ GET /users/my-profile?_ts={timestamp}
 ```json
 {
   "user": {
-    "accessId": "_7s6K4_-..I-.8_E",
-    "accessSecret": "_~1a_6Pj7-.sD7Z3",
-    "fullName": "许鑫垚",
-    "userId": "89FBD88B-BC83-4310-A4EC-1837249C8C8F",
-    "phoneNumber": "18839651086",
+    "accessId": "{mobile_api_access_id}",
+    "accessSecret": "{mobile_api_access_secret}",
+    "fullName": "示例用户",
+    "userId": "{user_id}",
+    "phoneNumber": "{phone_number}",
     "bindSchool": {...}
   }
 }
@@ -544,8 +544,8 @@ import init, { encrypt_password, Password } from './encrypt.js';
 await init();
 
 // 加密密码
-const phone = "18839651086";
-const password = "2580aiyao+";
+const phone = "{phone_number}";
+const password = "{plain_password}";
 const encrypted = encrypt_password(phone, password);
 const ciphertext = encrypted.ciphertext();
 
@@ -594,16 +594,20 @@ const response = await fetch('https://coreapi.mosoteach.cn/passports/account-log
 
 ## 五、测试账号
 
-| 字段 | 值 |
-|------|-----|
-| 用户名 | 18839651086 |
-| 密码 | 2580aiyao+ |
-| User ID | 89FBD88B-BC83-4310-A4EC-1837249C8C8F |
-| **网页版 Token (x-token)** | `e705d0b3bd73444587f5f8e822ed254a` |
-| **手机版 AccessId** | `_7s6K4_-..I-.8_E` |
-| **手机版 AccessSecret** | `_~1a_6Pj7-.sD7Z3` |
-| 学校 | 河南理工大学 |
-| 班级ID | 284A240E-BD1D-11F0-B5BC-9C63C078B890 |
+本文档不保存真实账号、密码、token、access secret 或其他可复用凭据。
+
+如需联调，请在本地安全位置保存测试凭据，并在示例中使用以下占位符：
+
+| 字段 | 占位符 |
+|------|--------|
+| 用户名 | `{phone_number}` |
+| 密码 | `{plain_password}` |
+| User ID | `{user_id}` |
+| 网页版 Token (x-token) | `{web_api_token}` |
+| 手机版 AccessId | `{mobile_api_access_id}` |
+| 手机版 AccessSecret | `{mobile_api_access_secret}` |
+| 学校 | `{school_name}` |
+| 班级ID | `{clazz_course_id}` |
 
 ---
 

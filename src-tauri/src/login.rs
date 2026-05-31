@@ -508,8 +508,6 @@ impl MosoteachClient {
             URL_CC_RESOURCE_VIEWER, ccid, resource_id, timestamp
         );
 
-        println!("[Complete] 请求viewer API: {}", url);
-
         let response = self
             .http_client
             .get(&url)
@@ -517,8 +515,6 @@ impl MosoteachClient {
             .send()
             .await
             .map_err(|e| format!("访问资源失败: {}", e))?;
-
-        println!("[Complete] viewer API状态: {}", response.status());
 
         if !response.status().is_success() {
             return Err(format!("访问资源失败:状态码{}", response.status()));
@@ -528,12 +524,9 @@ impl MosoteachClient {
             .text()
             .await
             .map_err(|e| format!("读取响应失败: {}", e))?;
-        println!("[Complete] viewer API响应: {}", body_text);
 
         let viewer_resp: ViewerResponse =
             serde_json::from_str(&body_text).map_err(|e| format!("解析viewer响应失败: {}", e))?;
-
-        println!("[Complete] viewer url字段: {:?}", viewer_resp.url);
 
         Ok(viewer_resp)
     }
@@ -568,21 +561,11 @@ impl MosoteachClient {
 
             handles.push(async move {
                 let _permit = sem.acquire().await.unwrap();
-                match http
+                let _ = http
                     .get(&url)
                     .timeout(std::time::Duration::from_secs(15))
                     .send()
-                    .await
-                {
-                    Ok(resp) => {
-                        if resp.status().is_success() {
-                            println!("[Complete] 分片请求成功: segment={}", i);
-                        }
-                    }
-                    Err(e) => {
-                        println!("[Complete] 分片请求失败: segment={}, error={}", i, e);
-                    }
-                }
+                    .await;
             });
         }
 
@@ -694,11 +677,6 @@ impl MosoteachClient {
             "duration": duration
         });
 
-        println!(
-            "[Complete] 进度上报: watchTo={}, currentWatchTo={}, duration={}",
-            watch_to, duration, duration
-        );
-
         let response = self
             .http_client
             .post(&url)
@@ -725,20 +703,10 @@ impl MosoteachClient {
         duration: f64,
         times: usize,
     ) -> Result<(), String> {
-        for i in 0..times {
-            println!(
-                "[Complete] 进度上报 {}/{}: watchTo={}, currentWatchTo={}",
-                i + 1,
-                times,
-                watch_to,
-                duration
-            );
-            if let Err(e) = self
+        for _ in 0..times {
+            let _ = self
                 .update_watch_progress(ccid, resource_id, watch_to, duration)
-                .await
-            {
-                println!("[Complete] 第{}次上报失败: {}", i + 1, e);
-            }
+                .await;
             // 间隔一小段时间
             tokio::time::sleep(std::time::Duration::from_millis(500)).await;
         }
@@ -938,12 +906,6 @@ fn clean_cdn_url(url: &str) -> String {
 
 async fn build_dashboard(client: &MosoteachClient) -> Result<DashboardState, String> {
     let courses = client.list_course().await?;
-    println!("[Dashboard] 课程数量: {}", courses.len());
-
-    // 按课程ID排序，确保顺序一致
-    let mut course_ids: Vec<_> = courses.iter().map(|c| c.id.clone()).collect();
-    course_ids.sort();
-    println!("[Dashboard] 课程ID列表(排序后): {:?}", course_ids);
 
     let sem = Arc::new(Semaphore::new(10));
 
@@ -1009,59 +971,6 @@ pub async fn complete_course_resources(
 
     let resources = client.list_resources(ccid).await?;
 
-    // ==================== 调试信息开始 ====================
-    println!("\n========== [Complete] 调试信息 ==========");
-    println!("[Complete] 课程ID (ccid): {}", ccid);
-    println!("[Complete] 获取到资源数量: {}", resources.len());
-
-    // 打印每个资源的完整结构（用于调试字段缺失问题）
-    println!("\n[Complete] 资源列表详细结构:");
-    for (i, r) in resources.iter().enumerate() {
-        println!("  资源[{}]: id={}", i, r._id);
-        println!(
-            "    - score: {:?}, obtain_score: {:?}",
-            r.score, r.obtain_score
-        );
-        println!(
-            "    - mime_type: {:?}, meta_duration: {:?}",
-            r.mime_type, r.meta_duration
-        );
-        println!(
-            "    - full_cover_url: {:?}",
-            r.full_cover_url.as_ref().map(|u| if u.len() > 80 {
-                format!("{}...({} chars)", &u[..80], u.len())
-            } else {
-                u.clone()
-            })
-        );
-    }
-
-    // 检查 full_cover_url 是否存在
-    let resources_with_url: Vec<_> = resources
-        .iter()
-        .filter(|r| r.full_cover_url.is_some())
-        .collect();
-    let resources_without_url: Vec<_> = resources
-        .iter()
-        .filter(|r| r.full_cover_url.is_none())
-        .collect();
-
-    println!(
-        "\n[Complete] URL 统计: 有URL的={}, 无URL的={}",
-        resources_with_url.len(),
-        resources_without_url.len()
-    );
-
-    if !resources_without_url.is_empty() {
-        println!("[Complete] 无URL的资源ID列表:");
-        for r in &resources_without_url {
-            println!("    - {}", r._id);
-        }
-    }
-    // ==================== 调试信息结束 ====================
-
-    println!("\n[Complete] 开始处理资源...");
-
     let incomplete: Vec<&ResourceItem> = resources
         .iter()
         .filter(|r| {
@@ -1072,18 +981,14 @@ pub async fn complete_course_resources(
         .collect();
 
     let total = incomplete.len();
-    println!("[Complete] 未完成资源数: {}", total);
 
     if total == 0 {
-        println!("[Complete] 没有未完成资源，跳过");
         return Ok(CompletionResult {
             total: 0,
             completed: 0,
             failed: vec![],
         });
     }
-
-    println!("\n[Complete] 开始标记资源为已完成...");
 
     // 使用正确的 viewer API 来标记资源为已完成
     let sem = Arc::new(Semaphore::new(5));
@@ -1109,7 +1014,6 @@ pub async fn complete_course_resources(
                         if let Some(url) = viewer.url {
                             // 清理 URL (移除 oss 签名参数)
                             let clean_url = clean_cdn_url(&url);
-                            println!("[Complete] 获取到视频URL: {}", clean_url);
 
                             // 获取 m3u8 播放列表
                             match client.fetch_m3u8(&clean_url).await {
@@ -1117,11 +1021,6 @@ pub async fn complete_course_resources(
                                     // 简单解析: 查找所有 .ts 分片
                                     let ts_count = m3u8_content.matches(".ts").count();
                                     if ts_count > 0 {
-                                        println!(
-                                            "[Complete] 发现 {} 个视频分片，请求中...",
-                                            ts_count
-                                        );
-
                                         // 获取 base URL (用于拼接分片地址)
                                         let base = if let Some(idx) = clean_url.rfind('/') {
                                             format!("{}/", &clean_url[..idx + 1])
@@ -1131,18 +1030,13 @@ pub async fn complete_course_resources(
 
                                         // 请求所有分片
                                         let _ = client.fetch_ts_segments(&base, ts_count).await;
-                                        println!("[Complete] 分片请求完成");
                                     }
                                 }
-                                Err(e) => {
-                                    println!("[Complete] 获取m3u8失败: error={}", e);
-                                }
+                                Err(_) => {}
                             }
                         }
                     }
-                    Err(e) => {
-                        println!("[Complete] 获取viewer URL失败: error={}", e);
-                    }
+                    Err(_) => {}
                 }
 
                 // 更新观看进度为视频长度，发送多次确保完成
@@ -1152,50 +1046,32 @@ pub async fn complete_course_resources(
                     .report_progress_multiple(&ccid, &resource_id, target_watch, duration, 3)
                     .await
                 {
-                    println!(
-                        "[Complete] 进度上报失败: resource_id={}, error={}",
-                        resource_id, e
-                    );
+                    return Err(e);
                 }
             }
 
             // 2. 非视频资源，优先使用 view_resource (预览 API)
             if !mime_type.starts_with("video/") {
-                println!("[Complete] 开始处理非视频资源: resource_id={}, mime_type={}", resource_id, mime_type);
-
                 // 优先使用 view_resource (预览 API)
                 match client.view_resource(&ccid, &resource_id).await {
-                    Ok(_) => {
-                        println!("[Complete] ✓ 预览完成(view_resource): resource_id={}", resource_id);
-                    }
-                    Err(e) => {
-                        println!("[Complete] ✗ view_resource 失败，准备尝试 download: resource_id={}, error={}", resource_id, e);
-
+                    Ok(_) => {}
+                    Err(_) => {
                         // download API 作为备用
-                        match client.download_resource_api(&ccid, &resource_id).await {
-                            Ok(_) => {
-                                println!("[Complete] ✓ 下载完成(download API): resource_id={}", resource_id);
-                            }
-                            Err(e2) => {
-                                println!("[Complete] ✗ download API 也失败: resource_id={}, error={}", resource_id, e2);
-                            }
-                        }
+                        let _ = client.download_resource_api(&ccid, &resource_id).await;
                     }
                 }
             }
+            Ok::<(), String>(())
         });
     }
 
-    println!("[Complete] 等待所有处理完成...");
-    join_all(handles).await;
+    let _ = join_all(handles).await;
 
     tokio::time::sleep(std::time::Duration::from_secs(3)).await;
 
-    println!("[Complete] 重新获取资源列表...");
     let resources_after = match client.list_resources(ccid).await {
         Ok(r) => r,
-        Err(e) => {
-            println!("[Complete] 重新获取失败: {}", e);
+        Err(_) => {
             return Ok(CompletionResult {
                 total,
                 completed: 0,
@@ -1214,17 +1090,6 @@ pub async fn complete_course_resources(
             Some(after) => {
                 let score = after.score.unwrap_or(0.0);
                 let obtain = after.obtain_score.unwrap_or(-1.0);
-                println!(
-                    "[Complete] 对比 {}: score={} obtain={} {}",
-                    before._id,
-                    score,
-                    obtain,
-                    if score > 0.0 && obtain >= score {
-                        "✓ 已完成"
-                    } else {
-                        "✗ 未完成"
-                    }
-                );
                 if score > 0.0 && obtain >= score {
                     completed += 1;
                 } else {
@@ -1232,13 +1097,11 @@ pub async fn complete_course_resources(
                 }
             }
             None => {
-                println!("[Complete] 对比 {}: 刷新后未找到该资源", before._id);
                 failed.push(before._id.clone());
             }
         }
     }
 
-    println!("[Complete] 完成统计: {}/{} 成功", completed, total);
     Ok(CompletionResult {
         total,
         completed,

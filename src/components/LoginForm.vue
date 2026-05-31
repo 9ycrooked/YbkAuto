@@ -40,19 +40,15 @@ const handleLogin = async () => {
   isLoading.value = true;
 
   try {
-    console.log("[LoginForm] Starting login for:", username.value);
     const ciphertext = await encryptPassword(username.value, password.value);
-    console.log("[LoginForm] Got ciphertext, calling backend...");
     const session = await invoke<SessionState>("login_command", {
       username: username.value,
       ciphertext: ciphertext,
     });
-    console.log("[LoginForm] Login success!");
 
     password.value = "";
     emit("loginSuccess", session);
   } catch (error) {
-    console.error("[LoginForm] Login error:", error);
     toastMessage.value = String(error);
     showToast.value = true;
   } finally {

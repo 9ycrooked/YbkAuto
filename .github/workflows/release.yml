@@ -1,38 +1,76 @@
-name: 'Release'
+name: Release
 
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
+
+permissions:
+  contents: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
-  publish-tauri:
-    permissions:
-      contents: write
+  build-windows:
     runs-on: windows-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: setup node
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          node-version: 22
 
-      - name: install Rust stable
+      - name: Enable Corepack
+        run: |
+          corepack enable
+
+      - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
-      - name: install frontend dependencies
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install frontend dependencies
         run: yarn install --immutable
 
-      - uses: tauri-apps/tauri-action@v0.6.2
+      - name: Load release notes
+        id: release_notes
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $notesPath = ".github/release-notes/$tag.md"
+          if (-not (Test-Path -LiteralPath $notesPath)) {
+            $notesPath = ".github/release-notes/default.md"
+          }
+          if (-not (Test-Path -LiteralPath $notesPath)) {
+            throw "Release notes file not found for $tag and default.md is missing."
+          }
+
+          $body = Get-Content -LiteralPath $notesPath -Raw
+          "body<<__YBKAUTO_RELEASE_NOTES__" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          $body | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          "__YBKAUTO_RELEASE_NOTES__" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
+      - name: Build Tauri app
+        uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           tagName: ${{ github.ref_name }}
-          releaseName: 'YbkAuto ${{ github.ref_name }}'
-          releaseBody: 'See the assets to download and install.'
-          releaseDraft: false
+          releaseName: "YbkAuto ${{ github.ref_name }}"
+          releaseBody: ${{ steps.release_notes.outputs.body }}
+          releaseDraft: true
           prerelease: false
+
+      - name: Upload update policy
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload ${{ github.ref_name }} release/update-policy.json --clobber

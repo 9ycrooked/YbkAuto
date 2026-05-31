@@ -233,10 +233,10 @@ function __wbg_get_imports() {
     const imports = {};
     imports.wbg = {};
     imports.wbg.__wbg_log_d77d95ab58bdb1a2 = function(arg0, arg1) {
-        console.log(getStringFromWasm0(arg0, arg1));
+        getStringFromWasm0(arg0, arg1);
     };
     imports.wbg.__wbg_error_d36af5b409535a7c = function(arg0, arg1) {
-        console.error(getStringFromWasm0(arg0, arg1));
+        getStringFromWasm0(arg0, arg1);
     };
     imports.wbg.__wbindgen_object_drop_ref = function(arg0) {
         takeObject(arg0);

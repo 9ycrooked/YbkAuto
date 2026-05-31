@@ -93,7 +93,7 @@ MIT License
 ## 联系方式
 
 - 邮箱：qianmang1@gmail.com
-- GitHub：https://github.com/qianmang1-del/YbkAuto
+- GitHub：https://github.com/9ycrooked/YbkAuto
 
 ## 打赏作者
 ![微信赞赏码.jpg](images/%E5%BE%AE%E4%BF%A1%E8%B5%9E%E8%B5%8F%E7%A0%81.jpg)

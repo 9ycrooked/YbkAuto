@@ -1,19 +1,35 @@
 <script setup lang="ts">
-import { computed, ref, watch, onErrorCaptured } from "vue";
+import { computed, onErrorCaptured, onMounted, ref, watch } from "vue";
+import { exit } from "@tauri-apps/plugin-process";
 import { useRouter, useRoute } from "vue-router";
 import { useSessionStore } from "./stores/session";
+import UpdateDialog from "./components/UpdateDialog.vue";
+import { useUpdater } from "./composables/useUpdater";
 
 const appError = ref<string | null>(null);
 
 onErrorCaptured((err) => {
   appError.value = String(err);
-  console.error("[App Error]", err);
   return false;
 });
 
 const router = useRouter();
 const route = useRoute();
 const sessionStore = useSessionStore();
+const {
+  updatePolicy,
+  updateDialogOpen,
+  updateDownloading,
+  updateError,
+  pendingUpdateInfo,
+  pendingUpdateNotes,
+  updateTotalBytes,
+  updateProgressPercent,
+  updateIsForced,
+  runUpdateCheck,
+  installPendingUpdate,
+  dismissUpdateDialog,
+} = useUpdater();
 
 const currentView = computed(() => {
   if (route.name === "dashboard") return "dashboard";
@@ -26,6 +42,10 @@ const navigateTo = (view: string) => {
   router.push({ name: view });
 };
 
+const closeApp = () => {
+  void exit(0);
+};
+
 watch(
   () => sessionStore.session.authenticated,
   (isAuth) => {
@@ -34,6 +54,10 @@ watch(
     }
   },
 );
+
+onMounted(() => {
+  void runUpdateCheck();
+});
 </script>
 
 <template>
@@ -94,6 +118,22 @@ watch(
         </Transition>
       </router-view>
     </section>
+
+    <UpdateDialog
+      :open="updateDialogOpen"
+      :forced="updateIsForced"
+      :downloading="updateDownloading"
+      :error="updateError"
+      :policy-message="updatePolicy.message"
+      :current-version="pendingUpdateInfo?.currentVersion"
+      :next-version="pendingUpdateInfo?.version"
+      :notes="pendingUpdateNotes"
+      :progress-percent="updateProgressPercent"
+      :has-total-bytes="Boolean(updateTotalBytes)"
+      @dismiss="dismissUpdateDialog"
+      @install="installPendingUpdate"
+      @close-app="closeApp"
+    />
   </main>
 </template>
 
