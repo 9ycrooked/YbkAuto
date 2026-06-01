@@ -1,11 +1,11 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "YbkAuto",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "identifier": "com.y.ybkauto",
   "build": {
     "beforeDevCommand": "yarn dev",
-    "devUrl": "http://localhost:1420",
+    "devUrl": "http://127.0.0.1:1420",
     "beforeBuildCommand": "yarn build",
     "frontendDist": "../dist"
   },
@@ -15,8 +15,8 @@
         "title": "YbkAuto",
         "width": 915,
         "height": 630,
-        "minWidth": 915,
-        "minHeight": 630,
+        "minWidth": 720,
+        "minHeight": 520,
         "center": true
       }
     ],

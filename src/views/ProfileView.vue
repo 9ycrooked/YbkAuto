@@ -1,12 +1,16 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import { useSessionStore } from "../stores/session";
 import { useRouter } from "vue-router";
 import { useUpdater } from "../composables/useUpdater";
 
+const GITHUB_REPOSITORY_URL = "https://github.com/9ycrooked/YbkAuto";
+const GITHUB_REPOSITORY_LABEL = "github.com/9ycrooked/YbkAuto";
 const sessionStore = useSessionStore();
 const router = useRouter();
 const selectedSetting = ref<string>("about");
+const repositoryOpenError = ref("");
 const { updateChecking, updateMessage, checkForUpdatesManually } = useUpdater();
 const updateStatusType = computed(() =>
   updateMessage.value.startsWith("更新检查失败") ? "error" : "info",
@@ -20,12 +24,21 @@ const handleLogout = async () => {
 const handleCheckUpdate = async () => {
   await checkForUpdatesManually();
 };
+
+const handleOpenRepository = async () => {
+  repositoryOpenError.value = "";
+  try {
+    await openUrl(GITHUB_REPOSITORY_URL);
+  } catch {
+    repositoryOpenError.value = `无法打开仓库链接，请手动访问 ${GITHUB_REPOSITORY_LABEL}`;
+  }
+};
 </script>
 
 <template>
   <div class="profile-layout">
     <aside class="profile-sidebar">
-      <div class="profile-card">
+      <div class="profile-card profile-card--desktop">
         <div class="profile-avatar">{{ sessionStore.userInitials }}</div>
         <h2 class="profile-name">
           {{ sessionStore.session.user?.fullName ?? "已登录用户" }}
@@ -136,15 +149,50 @@ const handleCheckUpdate = async () => {
         </div>
       </div>
     </aside>
-    <main class="profile-content">
-      <template v-if="selectedSetting === 'about'">
-        <div class="settings-content">
+    <div class="profile-scroll-region">
+      <div class="profile-card profile-card--mobile">
+        <div class="profile-avatar">{{ sessionStore.userInitials }}</div>
+        <h2 class="profile-name">
+          {{ sessionStore.session.user?.fullName ?? "已登录用户" }}
+        </h2>
+        <p class="profile-meta">
+          {{ sessionStore.session.user?.schoolName ?? "未知学校" }}<span
+            v-if="sessionStore.session.user?.departmentName"
+          >
+            · {{ sessionStore.session.user.departmentName }}</span
+          >
+        </p>
+        <p v-if="sessionStore.session.user?.studentNo" class="profile-id">
+          学号 {{ sessionStore.session.user.studentNo }}
+        </p>
+        <div class="profile-stats">
+          <div class="profile-stat">
+            <span class="profile-stat-value">{{ sessionStore.courses.length }}</span
+            ><span class="profile-stat-label">总课程</span>
+          </div>
+          <div class="profile-stat">
+            <span class="profile-stat-value">{{
+              sessionStore.totalCompletedResources
+            }}</span
+            ><span class="profile-stat-label">已完成</span>
+          </div>
+          <div class="profile-stat">
+            <span class="profile-stat-value">{{
+              sessionStore.totalIncompleteResources
+            }}</span
+            ><span class="profile-stat-label">未完成</span>
+          </div>
+        </div>
+      </div>
+      <main class="profile-content">
+        <template v-if="selectedSetting === 'about'">
+          <div class="settings-content">
           <h3 class="settings-content-title">关于 YbkAuto</h3>
           <div class="about-card">
             <div class="about-logo">Y</div>
             <div class="about-info">
               <p class="about-name">YbkAuto</p>
-              <p class="about-version">版本 0.3.3</p>
+              <p class="about-version">版本 0.3.4</p>
               <p class="about-desc">云班课桌面助手 — 课程管理、资源追踪、资源完成</p>
             </div>
           </div>
@@ -187,6 +235,52 @@ const handleCheckUpdate = async () => {
             {{ updateMessage }}
           </p>
 
+          <button class="repository-card" type="button" @click="handleOpenRepository">
+            <span class="repository-icon-wrapper">
+              <svg
+                class="repository-icon"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M6 3h9l3 3v15H6z" />
+                <path d="M14 3v4h4" />
+                <path d="M9 13h6" />
+                <path d="M9 17h4" />
+              </svg>
+            </span>
+            <span class="repository-content">
+              <span class="repository-title">项目仓库</span>
+              <span class="repository-desc">查看源码、发布版本与更新记录</span>
+              <span class="repository-link">{{ GITHUB_REPOSITORY_LABEL }}</span>
+            </span>
+            <svg
+              class="repository-arrow"
+              width="18"
+              height="18"
+              viewBox="0 0 18 18"
+              fill="none"
+              aria-hidden="true"
+            >
+              <path
+                d="M6.5 4.5h7v7M13.5 4.5l-9 9"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </button>
+          <p v-if="repositoryOpenError" class="repository-error">
+            {{ repositoryOpenError }}
+          </p>
+
           <div class="contact-card">
             <div class="contact-icon-wrapper">
               <svg class="contact-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -200,10 +294,10 @@ const handleCheckUpdate = async () => {
               <a :href="'mailto:qianmang1@gmail.com'" class="contact-email">qianmang1@gmail.com</a>
             </div>
           </div>
-        </div>
-      </template>
-      <template v-else-if="selectedSetting === 'donate'">
-        <div class="settings-content">
+          </div>
+        </template>
+        <template v-else-if="selectedSetting === 'donate'">
+          <div class="settings-content">
           <h3 class="settings-content-title">打赏作者</h3>
           <div class="donate-card">
 
@@ -215,10 +309,10 @@ const handleCheckUpdate = async () => {
             />
             <p class="donate-tip">扫描上方二维码打赏</p>
           </div>
-        </div>
-      </template>
-      <template v-else-if="selectedSetting === 'account'">
-        <div class="settings-content">
+          </div>
+        </template>
+        <template v-else-if="selectedSetting === 'account'">
+          <div class="settings-content">
           <h3 class="settings-content-title">账号安全</h3>
           <div class="account-info-card">
             <div class="account-row">
@@ -246,9 +340,10 @@ const handleCheckUpdate = async () => {
                 }}</span>
             </div>
           </div>
-        </div>
-      </template>
-    </main>
+          </div>
+        </template>
+      </main>
+    </div>
   </div>
 </template>
 
@@ -257,7 +352,10 @@ const handleCheckUpdate = async () => {
   display: grid;
   grid-template-columns: 280px 1fr;
   gap: 24px;
-  align-items: start;
+  align-items: stretch;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
 }
 
 .profile-sidebar {
@@ -268,6 +366,8 @@ const handleCheckUpdate = async () => {
   border-radius: 16px;
   overflow: hidden;
   border: 1px solid var(--border);
+  min-width: 0;
+  min-height: 0;
 }
 
 .profile-card {
@@ -277,6 +377,16 @@ const handleCheckUpdate = async () => {
   flex-direction: column;
   align-items: center;
   text-align: center;
+}
+
+.profile-card--mobile {
+  display: none;
+}
+
+.profile-scroll-region {
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
 }
 
 .profile-avatar {
@@ -421,6 +531,14 @@ const handleCheckUpdate = async () => {
   border-radius: 16px;
   padding: 28px;
   min-height: 400px;
+  max-height: 100%;
+  min-width: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.profile-content::-webkit-scrollbar {
+  display: none;
 }
 
 .settings-content-title {
@@ -505,6 +623,94 @@ const handleCheckUpdate = async () => {
   background: rgba(var(--error-rgb), 0.08);
   color: var(--error);
   border: 1px solid rgba(var(--error-rgb), 0.22);
+}
+
+.repository-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  width: 100%;
+  padding: 20px;
+  margin-bottom: 16px;
+  border-radius: 14px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  color: inherit;
+  font-family: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    transform 0.2s ease,
+    background 0.2s ease;
+}
+
+.repository-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.repository-card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.repository-icon-wrapper {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(var(--text-rgb), 0.06);
+  color: var(--text-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.repository-content {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.repository-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.repository-desc {
+  font-size: 0.8125rem;
+  color: var(--text-2);
+  line-height: 1.5;
+}
+
+.repository-link {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--accent);
+  overflow-wrap: anywhere;
+  margin-top: 4px;
+}
+
+.repository-arrow {
+  color: var(--text-3);
+  flex-shrink: 0;
+  margin-top: 2px;
+  transition: color 0.2s ease;
+}
+
+.repository-card:hover .repository-arrow {
+  color: var(--accent);
+}
+
+.repository-error {
+  margin: -4px 4px 16px;
+  color: var(--error);
+  font-size: 0.8125rem;
+  line-height: 1.5;
 }
 
 .contact-card {
@@ -688,6 +894,151 @@ const handleCheckUpdate = async () => {
 @media (max-width: 900px) {
   .profile-layout {
     grid-template-columns: 1fr;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: 12px;
+    overflow: hidden;
+  }
+
+  .profile-sidebar {
+    display: contents;
+    border-radius: 14px;
+  }
+
+  .settings-panel {
+    order: 1;
+    position: relative;
+    z-index: 5;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 8px;
+    overflow: hidden;
+  }
+
+  .settings-heading {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .settings-list {
+    flex-direction: row;
+    gap: 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .settings-list::-webkit-scrollbar {
+    display: none;
+  }
+
+  .settings-item {
+    width: auto;
+    flex: 0 0 auto;
+    min-height: 40px;
+    padding: 9px 12px;
+    white-space: nowrap;
+  }
+
+  .settings-item--danger {
+    margin-left: auto;
+  }
+
+  .profile-card--desktop {
+    display: none;
+  }
+
+  .profile-scroll-region {
+    order: 2;
+    display: flex;
+    min-height: 0;
+    height: 100%;
+    flex-direction: column;
+    gap: 12px;
+    overflow-y: auto;
+    scrollbar-width: none;
+  }
+
+  .profile-scroll-region::-webkit-scrollbar {
+    display: none;
+  }
+
+  .profile-card--mobile {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      "avatar name"
+      "avatar meta"
+      "avatar id"
+      "stats stats";
+    column-gap: 14px;
+    row-gap: 2px;
+    align-items: center;
+    padding: 16px 18px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    text-align: left;
+  }
+
+  .profile-avatar {
+    grid-area: avatar;
+    width: 48px;
+    height: 48px;
+    margin: 0;
+    font-size: 1.125rem;
+  }
+
+  .profile-name {
+    grid-area: name;
+    margin: 0;
+  }
+
+  .profile-meta {
+    grid-area: meta;
+  }
+
+  .profile-id {
+    grid-area: id;
+    margin-top: 0;
+  }
+
+  .profile-stats {
+    grid-area: stats;
+    margin-top: 12px;
+    padding-top: 12px;
+  }
+
+  .profile-content {
+    flex: 0 0 auto;
+    min-height: 0;
+    max-height: none;
+    overflow: hidden;
+  }
+}
+
+@media (max-width: 760px) {
+  .profile-content {
+    padding: 20px;
+  }
+
+  .profile-card {
+    padding: 14px 16px;
+  }
+
+  .settings-panel {
+    padding: 8px;
+  }
+
+  .about-card,
+  .repository-card,
+  .contact-card {
+    padding: 16px;
+  }
+
+  .repository-arrow {
+    display: none;
   }
 }
 </style>

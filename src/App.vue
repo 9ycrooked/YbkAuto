@@ -112,11 +112,13 @@ onMounted(() => {
         </button>
       </nav>
 
-      <router-view v-slot="{ Component, route }">
-        <Transition name="page" mode="out-in">
-          <component :is="Component" :key="route.name" />
-        </Transition>
-      </router-view>
+      <div class="view-content">
+        <router-view v-slot="{ Component, route }">
+          <Transition name="page" mode="out-in">
+            <component :is="Component" :key="route.name" />
+          </Transition>
+        </router-view>
+      </div>
     </section>
 
     <UpdateDialog
@@ -139,13 +141,15 @@ onMounted(() => {
 
 <style scoped>
 .app-shell {
-  min-height: 100vh;
+  height: 100vh;
   padding: 32px;
+  overflow: hidden;
 }
 
 .dashboard-layout {
   width: min(1100px, 100%);
   height: calc(100vh - 64px);
+  min-height: 0;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -226,6 +230,13 @@ onMounted(() => {
   border-radius: 12px;
   padding: 2px;
   width: fit-content;
+  flex-shrink: 0;
+}
+
+.view-content {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .view-tab {
@@ -327,6 +338,12 @@ onMounted(() => {
 @media (max-width: 900px) {
   .app-shell {
     padding: 18px;
+  }
+
+  .dashboard-layout {
+    width: 100%;
+    height: calc(100vh - 36px);
+    min-height: 0;
   }
 
   .view-tabs {
